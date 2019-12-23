@@ -3,6 +3,9 @@
 //Cargamos el modelo de costCenter
 var CostCenter = require('../models/costCenter');
 
+//Cargamos la libreria de paginaciones
+var mongoosePaginate = require('mongoose-pagination');
+
 //Función principal
 function home(req, res)
 {
@@ -108,6 +111,44 @@ function getCostCenter(req, res)
     });
 }
 
+//Función para obtener centros paginados
+function getCostCenters(req, res)
+{
+    //Incializamos la página en 1
+    var page = 1;
+
+    //Si se obtienen los parametros de la página
+    if(req.params.page)
+    {
+        //Obtenemos los valores que se pasen como parametro
+        page = req.params.page;
+    }
+
+    //Objetos por página son 10
+    var itemsPerPage = 10;
+
+    //EL objeto busca por el documento
+    CostCenter.find().sort('_id').paginate(page, itemsPerPage, (err, centers, total) => {
+
+        //Si existe un error en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en la petición del servidor. Intentalo de nuevo más tarde."
+        });
+
+        //Si no existen centros en las paginaciones
+        if(!centers) return res.status(404).send({
+            message: "No hay centros disponibles."
+        });
+
+        //Si no existen errores
+        return res.status(200).send({
+            centers,
+            total,
+            pages: Math.ceil(total/itemsPerPage)
+        });
+    });
+}
+
 //Función para actualizar los centros
 function updateCostCenter(req, res)
 {
@@ -202,6 +243,7 @@ module.exports = {
     home,
     saveCostCenter,
     getCostCenter,
+    getCostCenters,
     updateCostCenter,
     removeCostCenter
 }

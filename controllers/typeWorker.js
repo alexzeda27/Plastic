@@ -3,6 +3,9 @@
 //Cargamos el modelo de tipo_trabajador
 var TypeWorker = require('../models/typeWorker');
 
+//Cargamos la libreria de paginaciones
+var mongoosePaginate = require('mongoose-pagination');
+
 //Función principal
 function home(req, res)
 {
@@ -110,6 +113,44 @@ function getTypeWorker(req, res)
     });
 }
 
+//Función para obtener tipo_trabajador paginados
+function getTypeWorkers(req, res)
+{
+    //Incializamos la página en 1
+    var page = 1;
+
+    //Si se obtienen los parametros de la página
+    if(req.params.page)
+    {
+        //Obtenemos los valores que se pasen como parametro
+        page = req.params.page;
+    }
+
+    //Objetos por página son 10
+    var itemsPerPage = 10;
+
+    //EL objeto busca por el documento
+    TypeWorker.find().sort('_id').paginate(page, itemsPerPage, (err, workers, total) => {
+
+        //Si existe un error en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en la petición del servidor. Intentalo de nuevo más tarde."
+        });
+
+        //Si no existen tipos_trabajador en las paginaciones
+        if(!workers) return res.status(404).send({
+            message: "No hay centros disponibles."
+        });
+
+        //Si no existen errores
+        return res.status(200).send({
+            workers,
+            total,
+            pages: Math.ceil(total/itemsPerPage)
+        });
+    });
+}
+
 //Función para actualizar los tipos de trabajadores
 function updateTypeWorker(req, res)
 {
@@ -202,7 +243,8 @@ function removeTypeWorker(req, res)
 module.exports = {                                                                                                  
     home,                                                                                                  
     saveTypeWorker,                                                                                                  
-    getTypeWorker,                                                                                                  
+    getTypeWorker,
+    getTypeWorkers,                                                                                                  
     updateTypeWorker,                                                                                                  
     removeTypeWorker                                                                                                 
 }                                                                                                  

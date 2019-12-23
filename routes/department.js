@@ -12,6 +12,7 @@ var api = express.Router();
 api.get('/', DepartmentController.home);
 api.post('/registrar', DepartmentController.saveDepartment);
 api.get('/consultar/:id', DepartmentController.getDepartment);
+api.get('/consultar-paginados/:page?', DepartmentController.getDepartments);
 api.put('/actualizar/:id', DepartmentController.updateDepartment);
 api.delete('/eliminar/:id', DepartmentController.removeDepartment);
 

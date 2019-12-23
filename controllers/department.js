@@ -3,6 +3,9 @@
 //Cargamos el modelo de Department
 var Department = require('../models/department');
 
+//Cargamos la libreria de paginaciones
+var mongoosePaginate = require('mongoose-pagination');
+
 //Función principal
 function home(req, res)
 {
@@ -104,6 +107,44 @@ function getDepartment(req, res)
     });
 }
 
+//Función para obtener departamentos paginados
+function getDepartments(req, res)
+{
+    //Incializamos la página en 1
+    var page = 1;
+
+    //Si se obtienen los parametros de la página
+    if(req.params.page)
+    {
+        //Obtenemos los valores que se pasen como parametro
+        page = req.params.page;
+    }
+
+    //Objetos por página son 10
+    var itemsPerPage = 10;
+
+    //EL objeto busca por el documento
+    Department.find().sort('_id').paginate(page, itemsPerPage, (err, departments, total) => {
+
+        //Si existe un error en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en la petición del servidor. Intentalo de nuevo más tarde."
+        });
+
+        //Si no existen centros en las paginaciones
+        if(!departments) return res.status(404).send({
+            message: "No hay centros disponibles."
+        });
+
+        //Si no existen errores
+        return res.status(200).send({
+            departments,
+            total,
+            pages: Math.ceil(total/itemsPerPage)
+        });
+    });
+}
+
 //Función para actualizar los departamentos
 function updateDepartment(req, res)
 {
@@ -198,6 +239,7 @@ module.exports = {
     home,
     saveDepartment,
     getDepartment,
+    getDepartments,
     updateDepartment,
     removeDepartment
 }

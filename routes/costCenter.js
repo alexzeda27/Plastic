@@ -12,6 +12,7 @@ var api = express.Router();
 api.get('/', CostCenterController.home);
 api.post('/registrar', CostCenterController.saveCostCenter);
 api.get('/consultar/:id', CostCenterController.getCostCenter);
+api.get('/consultar-paginados/:page?', CostCenterController.getCostCenters);
 api.put('/actualizar/:id', CostCenterController.updateCostCenter);
 api.delete('/eliminar/:id', CostCenterController.removeCostCenter);
 

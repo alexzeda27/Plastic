@@ -16,6 +16,8 @@ var typeWorker_routes = require('./routes/typeWorker');
 var costCenter_routes = require('./routes/costCenter');
 //Cargamos la ruta de departamentos
 var department_routes = require('./routes/department');
+//Cargamos la ruta de puestos
+var position_routes = require('./routes/position');
 
 //Middlewares
 
@@ -30,6 +32,7 @@ app.use(bodyParser.json());
 app.use('/api/tipo-trabajador', typeWorker_routes);
 app.use('/api/centro-costo', costCenter_routes);
 app.use('/api/departamento', department_routes);
+app.use('/api/puesto', position_routes);
 
 //Exportar
 module.exports = app;

@@ -12,6 +12,7 @@ var api = express.Router();
 api.get('/', TypeWorkerController.home);
 api.post('/registrar', TypeWorkerController.saveTypeWorker);
 api.get('/consultar/:id', TypeWorkerController.getTypeWorker);
+api.get('/consultar-paginados/:page?', TypeWorkerController.getTypeWorkers);
 api.put('/actualizar/:id', TypeWorkerController.updateTypeWorker);
 api.delete('/eliminar/:id', TypeWorkerController.removeTypeWorker);
 
