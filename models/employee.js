@@ -13,7 +13,6 @@ var EmployeeSchema = Schema({
     surnameP: String,
     surnameM: String,
     image: String,
-    typeWorker: { type: Schema.ObjectId, ref: 'TypeWorker' },
     position: { type: Schema.ObjectId, ref: 'Position' },
     department: { type: Schema.ObjectId, red: 'Department' } 
 });

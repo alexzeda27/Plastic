@@ -145,7 +145,7 @@ function getPositions(req, res)
     //Objetos por página son 10
     var itemsPerPage = 10;
 
-    //EL objeto busca por el documento
+    //El objeto busca por el documento
     Position.find().sort('_id').populate({path: 'costCenter'}).paginate(page, itemsPerPage, (err, positions, total) => {
 
         //Si existe un error en el servidor

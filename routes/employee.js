@@ -11,6 +11,9 @@ var api = express.Router();
 //Definimos las rutas 
 api.get('/', EmployeeController.home);
 api.post('/registrar', EmployeeController.saveEmployee);
+api.get('/consultar/:id', EmployeeController.getEmployee);
+api.get('/consultar-paginados/:page?', EmployeeController.getEmployees);
+api.put('/actualizar/:id', EmployeeController.updateEmployee);
 
 //Exportamos las api
 module.exports = api;
