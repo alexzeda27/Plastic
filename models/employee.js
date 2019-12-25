@@ -8,10 +8,11 @@ var Schema = mongoose.Schema;
 //El esquema de Employee tendra los siguientes atributos
 var EmployeeSchema = Schema({
 
-    payroll: String,
+    payroll: Number,
     name: String,
     surnameP: String,
     surnameM: String,
+    email: String,
     image: String,
     position: { type: Schema.ObjectId, ref: 'Position' },
     department: { type: Schema.ObjectId, red: 'Department' } 

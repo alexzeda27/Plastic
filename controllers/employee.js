@@ -6,8 +6,17 @@ var TypeWorker = require('../models/typeWorker');
 var Position = require('../models/position');
 var Department = require('../models/department');
 
+//Cargamos los servicios
+var jwt = require('../services/jwt');
+
 //Cargamos la libreria de mongoose-pagination
 var mongoosePaginate = require('mongoose-pagination');
+//Cargamos la libreria bcrypt
+var bcrypt = require('bcrypt-nodejs');
+//Cargamos la libreria path de express
+var path = require('path');
+//Cargamos la libreria fs de express
+var fs = require('fs');
 
 //Función principal
 function home(req, res)
@@ -27,19 +36,26 @@ function saveEmployee(req, res)
     var employee = new Employee();
 
     //Si el usuario llena todo el formulario
-    if(params.payroll && params.name && params.surnameP && params.surnameM && params.position && params.department)
+    if(params.payroll && params.name && params.surnameP && params.surnameM 
+    && params.email && params.position && params.department)
     {
         //Al objeto empleado le asignamos los valores del body
         employee.payroll = params.payroll,
         employee.name = params.name,
         employee.surnameP = params.surnameP,
         employee.surnameM = params.surnameM,
+        employee.email = params.email,
         employee.image = params.image,
         employee.position = params.position,
         employee.department = params.department
 
         //El objeto buscara por el documento el payroll
-        Employee.find({payroll: employee.payroll.toLowerCase()}, (err, employeeRepeat) => {
+        Employee.find({ $or: [
+
+            {payroll: employee.payroll},
+            {email: employee.email.toLowerCase()}
+
+        ]}).exec((err, employeeRepeat) => {
 
             //Si existe un error en el servidor
             if(err) return res.status(500).send({
@@ -50,7 +66,7 @@ function saveEmployee(req, res)
             if(employeeRepeat && employeeRepeat.length >= 1)
             {
                 return res.status(200).send({
-                    message: "Ya existe un empleado con este número de nómina."
+                    message: "Ya existe un empleado con este número de nómina y/o email."
                 });
             }
 
@@ -89,44 +105,110 @@ function saveEmployee(req, res)
     }
 }
 
-//Función para consultar empleados
-function getEmployee(req, res)
+//Función para logear empleados
+function loginEmployee(req, res)
 {
-    //Recogemos el id por parametro
-    var employeePayroll = req.params.payroll;
+    //Recogemos los parametros por el body
+    var params = req.body;
 
-    //El objeto buscara por payroll y mostrara su contenido
-    Employee.find(employeePayroll).populate({path: 'position', 
-    populate: [{path: 'typeWorker'}, {path: 'costCenter'}]}).exec((err, employee) => {
+    //A las variables le asignamos los valores
+    var email = params.email;
+    var payroll = params.payroll;
 
-        //Si existe error en el servidor
+    //El objeto buscara por el documento el email
+    Employee.findOne({email: email}, (err, employee) => {
+
+        //Si existe un error en el servidor
         if(err) return res.status(500).send({
-            message: "Hubo un error en la petición del servidor. Intentalo de nuevo más tarde."
+            message: "Hubo un error en la petición del servidor. Intentalo más tarde."
         });
 
-        //Si se presenta algun error de consulta
-        if(!employee) return res.status(404).send({
-            message: "Hubo un error en la consulta. Intentalo de nuevo."
-        });
+        //Si encuentra el correo
+        if(employee)
+        {
+            //El objeto buscara el payroll 
+            Employee.findOne({payroll: payroll}, (err, check) => {
 
-        //Si no existen errores en puesto
+                //Si hay un error en el servidor
+                if(err) return res.status(500).send({
+                    message: "Hubo un error en la petición del servidor."
+                });
+
+                //Si la contraseña es incorrecta
+                if(!check) return res.status(404).send({
+                    message: "La password es incorrecta. Verifique nuevamente."
+                });
+
+                //Si la contraseña es correcta
+                else
+                {
+                    //Si pide parametros de token
+                    if(params.gettoken)
+                    {
+                        //Nos devuelve el token cifrado
+                        return res.status(200).send({
+                            token: jwt.createToken(employee)
+                        });
+                    }
+              
+                    //Si no, nos regresa el objeto empleado
+                    return res.status(201).send({employee});
+                }
+
+            });
+        }
+
+        //Si el correo es incorrecto
         else
         {
-            //Se añadira la parte del departamento
-            Department.populate(employee, {path: 'department'}, (err, doc) => {
+            return res.status(404).send({
+                message: "El email es incorrecto. Verifique nuevamente."
+            });
+        }
+    });
+}
+
+//Función para obtener empleados por payroll
+function getEmployee(req, res)
+{
+    //Asignamos como parametro el payroll
+    var payroll = req.params.payroll;
+
+    //El objeto busca por payroll y muestra sus documentos
+    Employee.findOne({payroll: payroll}).populate({path: 'position', 
+    populate: [{path: 'typeWorker'}, {path: 'costCenter'}]}).exec((err, employee) => {
+
+        //Si existe un error en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en la petición del servidor. Intentalo más tarde."
+        });
+
+        //Si el objeto no encuentra el documento
+        if(!employee) return res.status(404).send({
+            message: "No se encontro al empleado solicitado."
+        });
+
+        //Si no se presentan errores
+        else
+        {
+            //Department desplegara su información
+            Department.populate(employee, {path: 'department'}, (err, check) => {
 
                 //Si existe un error en el servidor
                 if(err) return res.status(500).send({
-                    message: "Hubo un error en la petición del servidor. Intentalo de nuevo más tarde."
-                });
-                
-                //Si existe un error de consulta
-                if(!doc) return res.status(404).send({
-                    message: "Hubo un error en la consulta. Intentalo de nuevo."
+                    message: "Hubo un error en la petición del servidor. Intentalo más tarde."
                 });
 
-                //Si no existen errores, se presenta el objeto
-                return res.status(200).send({employee});
+                //Si el objeto no encuentra el documento con el departamento
+                if(!check) return res.status(404).send({
+                    message: "No se encontro al empleado solicitado."
+                });
+
+                //Si no existen errores
+                else
+                {
+                    return res.status(200).send({employee});
+                }
             });
         }
     });
@@ -190,60 +272,231 @@ function getEmployees(req, res)
     });
 }
 
-//Función para actualizar los registros
+//Función para actualizar los datos del empleado
 function updateEmployee(req, res)
 {
-    var employeePayroll = req.params.payroll;
+    //Recogemos el valor del payroll
+    var payroll = req.params.payroll;
 
+    //Recogemos los valores del body
     var update = req.body;
 
-    if(update.payroll && update.name && update.surnameP && 
-    update.surnameM && update.position && update.department)
-    {
-        Employee.find({payroll: update.payroll}, (err, employeeRepeat) => {
+    //El objeto buscara por el documento
+    Employee.find({ $or: [
 
-            if(err) return res.status(500).send({
-                message: "Hubo un error en la petición del servidor. Intentalo de nuevo más tarde."
-            });
+        {payroll: update.payroll},
+        {email: update.email}
 
-            if(employeeRepeat && employeeRepeat.length >= 1)
-            {
-                return res.status(404).send({
-                    message: "No puedes actualizar a este número de nomina porque ya existe."
-                });
-            }
+    ]}).exec((err, employeeRepeat) => {
 
-            else
-            {
-                Employee.findOneAndUpdate(employeePayroll, update, {new: true}, (err, employeeUpdated) => {
-
-                    if(err) return res.status(500).send({
-                        message: "Hubo un error en la petición del servidor, Intentalo de nuevo más tarde."
-                    });
-
-                    if(!employeeUpdated) return res.status(404).send({
-                        message: "Ocurrio un error al actualizar este registro. Intentelo de nuevo."
-                    });
-
-                    return res.status(201).send({update: employeeUpdated});
-                });
-            }
+        //Si existe un error en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en la petición del servidor. Intentalo más tarde."
         });
+
+        //Si el usuario se repite 
+        if(employeeRepeat && employeeRepeat.length >= 1)
+        {
+            return res.status(200).send({
+                message: "No puedes actualizar estos datos porque ya existen."
+            });
+        }
+
+        //Si no existe ningun error
+        else
+        {
+            //El objeto buscara y actualizara
+            Employee.findOneAndUpdate({payroll: payroll}, update, {new: true}, (err, employeeUpdated) => {
+
+                //Si existe un error en el servidor
+                if(err) return res.status(500).send({
+                    message: "Hubo un error en la petición del servidor. Intentalo más tarde."
+                });
+
+                //Si la actualización tuvo un error
+                if(!employeeUpdated) return res.status(404).send({
+                    message: "No se pudo actualizar este registro. Intentelo de nuevo."
+                });
+
+                //Si no existen errores
+                return res.status(201).send({update: employeeUpdated});
+            });
+        }
+    });
+}
+
+//Función para eliminar datos del empleado
+function removeEmployee(req, res)
+{
+    //Recogemos los parametros de payroll
+    var payroll = req.params.payroll;
+
+    //El objeto buscara el documento solicitado
+    Employee.findOneAndRemove({payroll: payroll}, (err, employeeDeleted) => {
+
+        //Si existe un error en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en la petición del servidor. Intentalo más tarde."
+        });
+
+        //Si se presenta algun error al eliminar el registro
+        if(!employeeDeleted) return res.status(404).send({
+            message: "Surgio un error al eliminar a este empleado. Intentalo de nuevo."
+        });
+
+        //Si no existen errores
+        return res.status(201).send({
+            message: "Empleado eliminado correctamente."
+        });
+    });
+}
+
+//Función para subir imágenes del empleado
+function uploadImageEmployee(req, res)
+{
+    //Obtenemos el payroll por parametro
+    var payroll = req.params.payroll;
+
+    //Si el archivo ya fue cargado
+    if(req.files)
+    {
+        //Obtenemos la imágen completa
+        var file_path = req.files.image.path;
+        console.log(file_path);
+
+        //Cortamos la imágen 
+        var file_split = file_path.split('/');
+        console.log(file_split);
+
+        //Obtenemos solo el nombre de la imágen
+        var file_name = file_split[2];
+        console.log(file_name);
+
+        //Cortamos la extensión de la imágen
+        var ext_split = file_name.split('\.');
+        console.log(ext_split);
+
+        //Obtenemos la extensión
+        var file_ext = ext_split[1];
+        console.log(file_ext);
+
+        //Si los ficheros cargados son
+        if(file_ext == 'jpg' || file_ext == 'jpeg' || file_ext == 'png' || file_ext == 'gif')
+        {
+            //Actualizar documento del empleado
+            Employee.findOneAndUpdate({payroll: payroll}, {image: file_name}, {new: true}, (err, imageUpdated) => {
+                
+                //Si hay un error en el servidor
+                if(err) return res.status(500).send({
+                    message: "Hubo un error en la petición del servidor. Intentalo más tarde."
+                });
+
+                //Si existe un error al actualizar la imágen
+                if(!imageUpdated) return res.status(404).send({
+                    message: "No se ha podido actualizar la imágen."
+                });
+                
+                //Si no existen errores
+                return res.status(200).send({employee: imageUpdated});
+            });
+        }
+    
+        //Si la extensión no es valida para la imágen
+        else
+        {
+            //Método que elimina el archiv cargado
+            fs.unlink(file_path, (err) => {
+    
+                return res.status(200).send({
+                    message: "Extensión del archivo no valida."
+                });
+            });
+        }
     }
 
+    //Si no se han cargado imagenes
     else
     {
-        return res.status(404).send({
-            message: "No puedes dejar campos vacios en el formulario."
-        })
+        return res.status(200).send({
+            message: "No se han cargado imagenes."
+        });
     }
+}
+
+//Función que devuelve imágenes de empleado
+function getImageFiles(req, res)
+{
+    //Obtenemos el fichero 
+    var image_file = req.params.imageFile;
+    //Obtenemos la ruta donde se encuentra el fichero
+    var path_file = './uploads/employees/' + image_file;
+
+    //Comprobamos de que el fichero existe
+    fs.exists(path_file, (exists) => {
+
+        //Si existe el fichero, devuelve la imagen
+        if(exists) res.sendFile(path.resolve(path_file));
+
+        //Si no existe el fichero
+        else
+        {
+            return res.status(404).send({
+                message: "La imagen no existe en la base de datos."
+            });
+        }
+    });
+}
+
+//Función que elimina las imágenes de empleado
+function removeImageFiles(req, res)
+{
+    //Obtenemos el fichero
+    var image_file = req.params.imageFile;
+    //Obtenemos la ruta donde se encuentra el fichero
+    var path_file = './uploads/employees/' + image_file;
+
+    //Comprobamos de que el fichero existe
+    fs.exists(path_file, (exists) => {
+
+        //Si existe el fichero elimina la imágen
+        if(exists)
+        {
+            //Si existe el fichero, elimina la imagen
+            if(exists) fs.unlink(path_file, (err) => {
+
+                //Si existe un error 
+                if(err) return res.status(500).send({
+                    message: "Error al eliminar el archivo."
+                });
+
+                //Si no existen errores
+                return res.status(201).send({
+                    message: "Imágen eliminada correctamente"
+                });
+            });
+            
+        } 
+
+        //Si no existe el fichero
+        else
+        {
+            return res.status(404).send({
+                message: "La imágen no existe en la base de datos."
+            });
+        }
+    });
 }
 
 //Exportamos los métodos
 module.exports = {
     home,
     saveEmployee,
+    loginEmployee,
     getEmployee,
     getEmployees,
-    updateEmployee
+    updateEmployee,
+    removeEmployee,
+    uploadImageEmployee,
+    getImageFiles,
+    removeImageFiles
 }

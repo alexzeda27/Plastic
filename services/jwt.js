@@ -8,18 +8,18 @@ var moment = require('moment');
 var secret = 'secret_key';
 
 //Exportamos el token de trabajadores con sus atributos
-exports.createToken = function(worker)
+exports.createToken = function(employee)
 {
     var payload = {
-        sub: worker._id,
-        nomina: worker.nomina,
-        name: worker.name,
-        surnameP: worker.surnameP,
-        surnameM: worker.surnameM,
-        typeWorker: worker.typeWorker,
-        position: worker.position,
-        department: worker.department,
-        image: worker.image,
+        sub: employee._id,
+        payroll: employee.nomina,
+        name: employee.name,
+        surnameP: employee.surnameP,
+        surnameM: employee.surnameM,
+        email: employee.email,
+        position: employee.position,
+        department: employee.department,
+        image: employee.image,
         iat: moment().unix(),
         exp: moment().add(30, 'days').unix
     };
