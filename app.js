@@ -22,6 +22,8 @@ var position_routes = require('./routes/position');
 var employee_routes = require('./routes/employee');
 //Cargamos la ruta de operadores
 var operator_routes = require('./routes/operator');
+//Cargamos la ruta de supervisores
+var supervisor_routes = require('./routes/supervisor');
 
 //Middlewares
 
@@ -39,6 +41,7 @@ app.use('/api/departamento', department_routes);
 app.use('/api/puesto', position_routes);
 app.use('/api/empleado', employee_routes);
 app.use('/api/operador', operator_routes);
+app.use('/api/supervisor', supervisor_routes);
 
 //Exportar
 module.exports = app;

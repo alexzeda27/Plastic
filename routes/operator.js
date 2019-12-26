@@ -11,7 +11,8 @@ var api = express.Router();
 
 //Definimos los métodos
 api.get('/', OperatorController.home);
-api.get('/consultar/:payroll', OperatorController.getOperator);
+api.get('/consultar/:id', OperatorController.getOperator);
+api.get('/consultar-paginados/:page?', OperatorController.getOperators);
 
 //Exportamos los métodos
 module.exports = api;

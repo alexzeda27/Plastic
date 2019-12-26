@@ -6,6 +6,7 @@ var TypeWorker = require('../models/typeWorker');
 var Position = require('../models/position');
 var Department = require('../models/department');
 var Operator = require('../models/operator');
+var Supervisor = require('../models/supervisor');
 
 //Cargamos los servicios
 var jwt = require('../services/jwt');
@@ -37,9 +38,16 @@ function saveEmployee(req, res)
     var employee = new Employee();
     //Creamos el objeto de operador
     var operator = new Operator();
+    //Creamos el objeto de supervisor
+    var supervisor = new Supervisor();
 
     //Asignamos la id del operador de producción
     var modId = "5e018b937c253c4c0f44a3e3";
+    //Asignamos la id del sup de procesos
+    var procSup = "5e0187267c253c4c0f44a3c7";
+    //Asignamos la id del sup de producción
+    var prodSup = "5e01872f7c253c4c0f44a3c8";
+
 
     //Si el usuario llena todo el formulario
     if(params.payroll && params.name && params.surnameP && params.surnameM 
@@ -122,7 +130,7 @@ function saveEmployee(req, res)
 
                                         //Si existe un error en el servidor
                                         if(err) return res.status(500).send({
-                                            message: "Hubo un error en la petición del servidor. Intentalo más tarde 1."
+                                            message: "Hubo un error en la petición del servidor. Intentalo más tarde."
                                         });
 
                                         //Si hubo un error al actualizar el documento
@@ -132,6 +140,48 @@ function saveEmployee(req, res)
 
                                         //Si no existen errores.
                                         return res.status(201).send({operator: employeeStored});
+                                    });
+                                }
+                            });
+                        }
+
+                        //Si el empleado es Supervisor
+                        if(procSup == employee.position || prodSup == employee.position)
+                        {
+                            //Los datos se guardaran en el docuemnto de supervisores
+                            supervisor.save(employeeStored, (err, supervisorStored) => {
+
+                                //Si existe un error en el servidor
+                                if(err) return res.status(500).send({
+                                    message: "Hubo un error en la petición del servidor. Intentalo más tarde."
+                                });
+
+                                //Si existe un error en la insercción de datos
+                                if(!supervisorStored) return res.status(404).send({
+                                    message: "Hubo un error al registrar a este supervisor. Intentelo de nuevo."
+                                });
+
+                                //Si no existen errores, guardara el documento
+                                else
+                                {
+                                    //Obtenemos el id del supervisor
+                                    var supervisorId = supervisor.id;
+
+                                    //El objeto buscara por el documento
+                                    Supervisor.findByIdAndUpdate(supervisorId, {employee: employeeStored}, {new: true}, (err, supervisorUpdated) => {
+
+                                        //Si existe un error en el servidor
+                                        if(err) return res.status(500).send({
+                                            message: "Hubo un error en la petición del servidor. Intentalo más tarde."
+                                        });
+
+                                        //Si hubo un error al actualizar el documento
+                                        if(!supervisorUpdated) return res.status(404).send({
+                                            message: "No se pudieron ingresar los datos al documento de Supervisor"
+                                        });
+
+                                        //Si no existen errores
+                                        return res.status(201).send({supervisor: employeeStored});
                                     });
                                 }
                             });
