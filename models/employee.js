@@ -15,7 +15,7 @@ var EmployeeSchema = Schema({
     email: String,
     image: String,
     position: { type: Schema.ObjectId, ref: 'Position' },
-    department: { type: Schema.ObjectId, red: 'Department' } 
+    department: { type: Schema.ObjectId, ref: 'Department' } 
 });
 
 //Exportaremos el modelo para usarlo en otros archivos

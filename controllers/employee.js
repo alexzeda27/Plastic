@@ -5,6 +5,7 @@ var Employee = require('../models/employee');
 var TypeWorker = require('../models/typeWorker');
 var Position = require('../models/position');
 var Department = require('../models/department');
+var Operator = require('../models/operator');
 
 //Cargamos los servicios
 var jwt = require('../services/jwt');
@@ -34,6 +35,11 @@ function saveEmployee(req, res)
 
     //Creamos el objeto empleado
     var employee = new Employee();
+    //Creamos el objeto de operador
+    var operator = new Operator();
+
+    //Asignamos la id del operador de producción
+    var modId = "5e018b937c253c4c0f44a3e3";
 
     //Si el usuario llena todo el formulario
     if(params.payroll && params.name && params.surnameP && params.surnameM 
@@ -89,7 +95,53 @@ function saveEmployee(req, res)
                     //Si no existen errores
                     else
                     {
-                        return res.status(201).send({employee: employeeStored});
+                        //Si el empleado es MOD
+                        if(modId == employee.position)
+                        {
+                            //Los datos se guardaran en el documento de operadores
+                            operator.save(employeeStored, (err, operatorStored) => {
+
+                                //Si existe un error en el servidor
+                                if(err) return res.status(500).send({
+                                    message: "Hubo un error en la petición del servidor. Intentalo más tarde."
+                                });
+    
+                                //Si existe un error de insercción de datos
+                                if(!operatorStored) return res.status(404).send({
+                                    message: "Hubo un error al registar a este operador. Intentalo de nuevo."
+                                });
+    
+                                //Si no existen errores, guardara el documento
+                                else
+                                {
+                                    //Obtenemos el id del operador
+                                    var operatorId = operator.id;
+
+                                    //El objeto buscara por el documento
+                                    Operator.findByIdAndUpdate(operatorId, {employee: employeeStored}, {new: true}, (err, operatorUpdated) => {
+
+                                        //Si existe un error en el servidor
+                                        if(err) return res.status(500).send({
+                                            message: "Hubo un error en la petición del servidor. Intentalo más tarde 1."
+                                        });
+
+                                        //Si hubo un error al actualizar el documento
+                                        if(!operatorUpdated) return res.status(404).send({
+                                            message: "No se pudieron ingresar los datos."
+                                        })
+
+                                        //Si no existen errores.
+                                        return res.status(201).send({operator: employeeStored});
+                                    });
+                                }
+                            });
+                        }
+
+                        //Si el empleado no es MOD
+                        else
+                        {
+                            return res.status(201).send({employee: employeeStored});
+                        }
                     }
                 });
             }
@@ -281,6 +333,9 @@ function updateEmployee(req, res)
     //Recogemos los valores del body
     var update = req.body;
 
+    //Asignamos la id del operador de producción
+    var modId = "5e018b937c253c4c0f44a3e3";
+
     //El objeto buscara por el documento
     Employee.find({ $or: [
 
@@ -318,8 +373,21 @@ function updateEmployee(req, res)
                     message: "No se pudo actualizar este registro. Intentelo de nuevo."
                 });
 
-                //Si no existen errores
-                return res.status(201).send({update: employeeUpdated});
+                else
+                {
+                    //Si el empleado es MOD
+                    if(modId == update.position)
+                    {
+
+                    }
+
+                    //Si el empleado no es MOD
+                    else
+                    {
+                        return res.status(201).send({update: employeeUpdated});
+                    }
+
+                }
             });
         }
     });
@@ -341,7 +409,7 @@ function removeEmployee(req, res)
 
         //Si se presenta algun error al eliminar el registro
         if(!employeeDeleted) return res.status(404).send({
-            message: "Surgio un error al eliminar a este empleado. Intentalo de nuevo."
+            message: "Este número de nomina no existe. Verifique su información."
         });
 
         //Si no existen errores
