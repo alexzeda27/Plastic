@@ -13,7 +13,7 @@ var api = express.Router();
 api.get('/', SupervisorController.home);
 api.get('/consultar/:id', SupervisorController.getSupervisor);
 api.get('/consultar-paginados/:page?', SupervisorController.getSupervisors);
-api.post('/registrar-bloque', SupervisorController.saveSquare);
+api.post('/crear-bloque', SupervisorController.saveSquare);
 api.get('/consultar-bloque/:id', SupervisorController.getSquare);
 api.get('/consultar-bloque-paginados/:page?', SupervisorController.getSquares);
 api.put('/actualizar/:id', SupervisorController.updateSquares);

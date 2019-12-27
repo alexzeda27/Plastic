@@ -91,19 +91,13 @@ function saveSquare(req, res)
     var square = new Square();
 
     //Si el supervisor llena todo el formulario
-    if(params.numberSquare && params.department)
+    if(params.department)
     {
         //Al objeto le asignamos los valores del body
-        square.numberSquare = params.numberSquare;
         square.department = params.department;
 
         //El objeto buscara por el documento
-        Square.find({ $and: [
-
-            {numberSquare: square.numberSquare},
-            {department: square.department}
-
-        ]}).exec((err, squareRepeat) => {
+        Square.find({department: square.department}, (err, squareRepeat) => {
 
             //Si existe un error en el servidor
             if(err) return res.status(500).send({
@@ -122,7 +116,7 @@ function saveSquare(req, res)
             else
             {
                 //El objeto guardara el documento
-                square.save({$push: {numberSquare: {$each: [square.numberSquare]}}}, (err, squareStored) => {
+                square.save((err, squareStored) => {
 
                     //Si existe un error en el servidor
                     if(err) return res.status(500).send({
@@ -211,16 +205,20 @@ function getSquares(req, res)
 //Función para actualizar el arreglo del bloque
 function updateSquares(req, res)
 {
+    //Recogemos la id del bloque por parametro
     var squareId = req.params.id;
-
+    //Recogemos los datos del body
     var update = req.body;
 
+    //El objeto Bloque buscara por el documento
     Square.find({department: update.department}, (err, squareRepeat) => {
 
+        //Si existe un error en el servidor
         if(err) return res.status(500).send({
             message: "Hubo un error en la petición del servidor. Intentalo de nuevo más tarde."
         });
 
+        //Si el documento se repite
         if(squareRepeat && squareRepeat.length >= 1)
         {
             return res.status(200).send({
@@ -228,23 +226,37 @@ function updateSquares(req, res)
             });
         }
 
+        //Si no existen errores
         else
         {
+            //El objeto buscara por el documento el id
             Square.findByIdAndUpdate(squareId, update, {new:true}, (err, squareUpdated) => {
 
+                //Si existe un error en el servidor
                 if(err) return res.status(500).send({
                     message: "Hubo un error en la petición del servidor. Intentalo más tarde."
                 });
-
+                
+                //Si existe un error al actualizar el documento
                 if(!squareUpdated) return res.status(404).send({
                     message: "Surgio un error al actualizar este documento."
                 });
 
-                return res.status({update: squareUpdated});
+                //Si no existen errores
+                else
+                {
+                    var flag = false;
+
+                    for(var i = 0; i < squareUpdated.numberSquare.length; i++)
+                    {
+                        
+                    }
+                }   
             });
         }
     });
 }
+
 
 //Exportamos las funciones
 module.exports = {
