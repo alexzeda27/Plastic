@@ -51,28 +51,20 @@ function saveEmployee(req, res)
     //Asignamos el id del administrador de personal
     var adminId = "5e061947c6a5b323fc1f28a9"
 
-    //Si al inciar sesión, el empleado no es el administrador
-    if(req.employee.sub != adminId)
-    {
-        return res.status(403).send({
-            message: "No tienes los permisos suficientes para esta operación."
-        });
-    }
-
     //Si el empleado es el administrador.
-    else
-    {
+
         //Si el usuario llena todo el formulario
         if(params.payroll && params.name && params.surnameP && params.surnameM 
-        && params.email && params.position && params.department)
+        && params.username && params.password && params.position && params.department)
         {
             //Al objeto empleado le asignamos los valores del body
             employee.payroll = params.payroll,
             employee.name = params.name,
             employee.surnameP = params.surnameP,
             employee.surnameM = params.surnameM,
-            employee.email = params.email,
+            employee.username = params.username,
             employee.image = params.image,
+            employee.email = params.email,
             employee.position = params.position,
             employee.department = params.department
 
@@ -80,7 +72,7 @@ function saveEmployee(req, res)
             Employee.find({ $or: [
 
                 {payroll: employee.payroll},
-                {email: employee.email.toLowerCase()}
+                {username: employee.username.toLowerCase()}
 
             ]}).exec((err, employeeRepeat) => {
 
@@ -93,119 +85,124 @@ function saveEmployee(req, res)
                 if(employeeRepeat && employeeRepeat.length >= 1)
                 {
                     return res.status(200).send({
-                        message: "Ya existe un empleado con este número de nómina y/o email."
+                        message: "Ya existe un empleado con este número de nómina y/o nombre de usuario."
                     });
                 }
 
                 //Si no existen errores
                 else
                 {
-                    //El objeto se guardara en el documento
-                    employee.save((err, employeeStored) => {
+                    //Encriptaremos la contraseña
+                    bcrypt.hash(params.password, null, null, (err, hash) => {
+                        employee.password = hash;
 
-                        //Si existe un error en el servidor
-                        if(err) return res.status(500).send({
-                            message: "Hubo un error en la petición del servidor. Intentalo más tarde."
-                        });
+                            //El objeto se guardara en el documento
+                            employee.save((err, employeeStored) => {
 
-                        //Si existe un error de insercción de datos
-                        if(!employeeStored) return res.status(404).send({
-                            message: "Hubo un error al registar a este empleado. Intentelo de nuevo."
-                        });
+                            //Si existe un error en el servidor
+                            if(err) return res.status(500).send({
+                                message: "Hubo un error en la petición del servidor. Intentalo más tarde."
+                            });
 
-                        //Si no existen errores
-                        else
-                        {
-                            //Si el empleado es MOD
-                            if(modId == employee.position)
-                            {
-                                //Los datos se guardaran en el documento de operadores
-                                operator.save(employeeStored, (err, operatorStored) => {
+                            //Si existe un error de insercción de datos
+                            if(!employeeStored) return res.status(404).send({
+                                message: "Hubo un error al registar a este empleado. Intentelo de nuevo."
+                            });
 
-                                    //Si existe un error en el servidor
-                                    if(err) return res.status(500).send({
-                                        message: "Hubo un error en la petición del servidor. Intentalo más tarde."
-                                    });
-        
-                                    //Si existe un error de insercción de datos
-                                    if(!operatorStored) return res.status(404).send({
-                                        message: "Hubo un error al registar a este operador. Intentalo de nuevo."
-                                    });
-        
-                                    //Si no existen errores, guardara el documento
-                                    else
-                                    {
-                                        //Obtenemos el id del operador
-                                        var operatorId = operator.id;
-
-                                        //El objeto buscara por el documento
-                                        Operator.findByIdAndUpdate(operatorId, {employee: employeeStored}, {new: true}, (err, operatorUpdated) => {
-
-                                            //Si existe un error en el servidor
-                                            if(err) return res.status(500).send({
-                                                message: "Hubo un error en la petición del servidor. Intentalo más tarde."
-                                            });
-
-                                            //Si hubo un error al actualizar el documento
-                                            if(!operatorUpdated) return res.status(404).send({
-                                                message: "No se pudieron ingresar los datos."
-                                            })
-
-                                            //Si no existen errores.
-                                            return res.status(201).send({operator: employeeStored});
-                                        });
-                                    }
-                                });
-                            }
-
-                            //Si el empleado es Supervisor
-                            if(procSup == employee.position || prodSup == employee.position)
-                            {
-                                //Los datos se guardaran en el docuemnto de supervisores
-                                supervisor.save(employeeStored, (err, supervisorStored) => {
-
-                                    //Si existe un error en el servidor
-                                    if(err) return res.status(500).send({
-                                        message: "Hubo un error en la petición del servidor. Intentalo más tarde."
-                                    });
-
-                                    //Si existe un error en la insercción de datos
-                                    if(!supervisorStored) return res.status(404).send({
-                                        message: "Hubo un error al registrar a este supervisor. Intentelo de nuevo."
-                                    });
-
-                                    //Si no existen errores, guardara el documento
-                                    else
-                                    {
-                                        //Obtenemos el id del supervisor
-                                        var supervisorId = supervisor.id;
-
-                                        //El objeto buscara por el documento
-                                        Supervisor.findByIdAndUpdate(supervisorId, {employee: employeeStored}, {new: true}, (err, supervisorUpdated) => {
-
-                                            //Si existe un error en el servidor
-                                            if(err) return res.status(500).send({
-                                                message: "Hubo un error en la petición del servidor. Intentalo más tarde."
-                                            });
-
-                                            //Si hubo un error al actualizar el documento
-                                            if(!supervisorUpdated) return res.status(404).send({
-                                                message: "No se pudieron ingresar los datos al documento de Supervisor"
-                                            });
-
-                                            //Si no existen errores
-                                            return res.status(201).send({supervisor: employeeStored});
-                                        });
-                                    }
-                                });
-                            }
-
-                            //Si el empleado no es MOD
+                            //Si no existen errores
                             else
                             {
-                                return res.status(201).send({employee: employeeStored});
+                                //Si el empleado es MOD
+                                if(modId == employee.position)
+                                {
+                                    //Los datos se guardaran en el documento de operadores
+                                    operator.save(employeeStored, (err, operatorStored) => {
+
+                                        //Si existe un error en el servidor
+                                        if(err) return res.status(500).send({
+                                            message: "Hubo un error en la petición del servidor. Intentalo más tarde."
+                                        });
+            
+                                        //Si existe un error de insercción de datos
+                                        if(!operatorStored) return res.status(404).send({
+                                            message: "Hubo un error al registar a este operador. Intentalo de nuevo."
+                                        });
+            
+                                        //Si no existen errores, guardara el documento
+                                        else
+                                        {
+                                            //Obtenemos el id del operador
+                                            var operatorId = operator.id;
+
+                                            //El objeto buscara por el documento
+                                            Operator.findByIdAndUpdate(operatorId, {employee: employeeStored}, {new: true}, (err, operatorUpdated) => {
+
+                                                //Si existe un error en el servidor
+                                                if(err) return res.status(500).send({
+                                                    message: "Hubo un error en la petición del servidor. Intentalo más tarde."
+                                                });
+
+                                                //Si hubo un error al actualizar el documento
+                                                if(!operatorUpdated) return res.status(404).send({
+                                                    message: "No se pudieron ingresar los datos."
+                                                })
+
+                                                //Si no existen errores.
+                                                return res.status(201).send({operator: employeeStored});
+                                            });
+                                        }
+                                    });
+                                }
+
+                                //Si el empleado es Supervisor
+                                if(procSup == employee.position || prodSup == employee.position)
+                                {
+                                    //Los datos se guardaran en el docuemnto de supervisores
+                                    supervisor.save(employeeStored, (err, supervisorStored) => {
+
+                                        //Si existe un error en el servidor
+                                        if(err) return res.status(500).send({
+                                            message: "Hubo un error en la petición del servidor. Intentalo más tarde."
+                                        });
+
+                                        //Si existe un error en la insercción de datos
+                                        if(!supervisorStored) return res.status(404).send({
+                                            message: "Hubo un error al registrar a este supervisor. Intentelo de nuevo."
+                                        });
+
+                                        //Si no existen errores, guardara el documento
+                                        else
+                                        {
+                                            //Obtenemos el id del supervisor
+                                            var supervisorId = supervisor.id;
+
+                                            //El objeto buscara por el documento
+                                            Supervisor.findByIdAndUpdate(supervisorId, {employee: employeeStored}, {new: true}, (err, supervisorUpdated) => {
+
+                                                //Si existe un error en el servidor
+                                                if(err) return res.status(500).send({
+                                                    message: "Hubo un error en la petición del servidor. Intentalo más tarde."
+                                                });
+
+                                                //Si hubo un error al actualizar el documento
+                                                if(!supervisorUpdated) return res.status(404).send({
+                                                    message: "No se pudieron ingresar los datos al documento de Supervisor"
+                                                });
+
+                                                //Si no existen errores
+                                                return res.status(201).send({supervisor: employeeStored});
+                                            });
+                                        }
+                                    });
+                                }
+
+                                //Si el empleado no es MOD
+                                else
+                                {
+                                    return res.status(201).send({employee: employeeStored});
+                                }
                             }
-                        }
+                        });
                     });
                 }
             });
@@ -219,7 +216,6 @@ function saveEmployee(req, res)
             });
         }
     }
-}
 
 //Función para logear empleados
 function loginEmployee(req, res)
@@ -466,18 +462,9 @@ function removeEmployee(req, res)
 
     //Asignamos el id del administrador de personal
     var adminId = "5e061947c6a5b323fc1f28a9"
-    
-    //Si al iniciar sesión, el empleado no es el administrador
-    if(req.employee.sub != adminId)
-    {
-        return res.status(403).send({
-            message: "No tienes los permisos suficentes para esta operación."
-        });
-    }
 
     //Si el empleado es el administrador
-    else
-    {
+
         //El objeto buscara el documento solicitado
         Employee.findOneAndRemove({payroll: payroll}, (err, employeeDeleted) => {
 
@@ -496,7 +483,7 @@ function removeEmployee(req, res)
                 message: "Empleado eliminado correctamente."
             });
         });
-    }
+
 }
 
 //Función para subir imágenes del empleado

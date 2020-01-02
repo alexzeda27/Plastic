@@ -12,8 +12,10 @@ var EmployeeSchema = Schema({
     name: String,
     surnameP: String,
     surnameM: String,
-    email: String,
+    username: String,
+    password: String,
     image: String,
+    email: String,
     position: { type: Schema.ObjectId, ref: 'Position' },
     department: { type: Schema.ObjectId, ref: 'Department' } 
 });
