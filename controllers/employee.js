@@ -41,15 +41,9 @@ function saveEmployee(req, res)
     //Creamos el objeto de supervisor
     var supervisor = new Supervisor();
 
-    //Asignamos la id del operador de producción
     var modId = "5e018b937c253c4c0f44a3e3";
-    //Asignamos la id del sup de procesos
-    var procSup = "5e0187267c253c4c0f44a3c7";
-    //Asignamos la id del sup de producción
     var prodSup = "5e01872f7c253c4c0f44a3c8";
-
-    //Asignamos el id del administrador de personal
-    var adminId = "5e061947c6a5b323fc1f28a9"
+    var procSup = "5e0187267c253c4c0f44a3c7";
 
     //Si el empleado es el administrador.
 
@@ -224,11 +218,11 @@ function loginEmployee(req, res)
     var params = req.body;
 
     //A las variables le asignamos los valores
-    var email = params.email;
+    var username = params.username;
     var payroll = params.payroll;
 
     //El objeto buscara por el documento el email
-    Employee.findOne({email: email}, (err, employee) => {
+    Employee.findOne({username: username}, (err, employee) => {
 
         //Si existe un error en el servidor
         if(err) return res.status(500).send({
@@ -274,7 +268,7 @@ function loginEmployee(req, res)
         else
         {
             return res.status(404).send({
-                message: "El email es incorrecto. Verifique nuevamente."
+                message: "El nombre de usuario es incorrecto. Verifique nuevamente."
             });
         }
     });
@@ -393,65 +387,64 @@ function updateEmployee(req, res)
     //Recogemos los valores del body
     var update = req.body;
 
-    //Asignamos el id del administrador de personal
-    var adminId = "5e061947c6a5b323fc1f28a9"
-    
-    //Si al iniciar sesión, el empleado no es el administrador
-    if(req.employee.sub != adminId)
+    if(update)
     {
-        return res.status(403).send({
-            message: "No tienes los permisos suficentes para esta operación."
-        });
-    }
+        //Si el empleado es el administrador
 
-    //Si el empleado es el administrador
+            //El objeto buscara por el documento
+            Employee.find({ $or: [
+
+                {payroll: update.payroll},
+                {username: update.username.toLowerCase()}
+
+            ]}).exec((err, employeeRepeat) => {
+
+                //Si existe un error en el servidor
+                if(err) return res.status(500).send({
+                    message: "Hubo un error en la petición del servidor. Intentalo más tarde."
+                });
+
+                //Si el usuario se repite 
+                if(employeeRepeat && employeeRepeat.length >= 1)
+                {
+                    return res.status(200).send({
+                        message: "No puedes actualizar estos datos porque ya existen."
+                    });
+                }
+
+                //Si no existe ningun error
+                else
+                {
+                    //El objeto buscara y actualizara
+                    Employee.findOneAndUpdate({payroll: payroll}, update, {new: true}, (err, employeeUpdated) => {
+
+                        //Si existe un error en el servidor
+                        if(err) return res.status(500).send({
+                            message: "Hubo un error en la petición del servidor. Intentalo más tarde."
+                        });
+
+                        //Si la actualización tuvo un error
+                        if(!employeeUpdated) return res.status(404).send({
+                            message: "No se pudo actualizar este registro. Intentelo de nuevo."
+                        });
+
+                        else
+                        {
+                            return res.status(201).send({update: employeeUpdated});
+                        }
+                    });
+                }
+            });
+    }
+    
     else
     {
-        //El objeto buscara por el documento
-        Employee.find({ $or: [
-
-            {payroll: update.payroll},
-            {email: update.email}
-
-        ]}).exec((err, employeeRepeat) => {
-
-            //Si existe un error en el servidor
-            if(err) return res.status(500).send({
-                message: "Hubo un error en la petición del servidor. Intentalo más tarde."
-            });
-
-            //Si el usuario se repite 
-            if(employeeRepeat && employeeRepeat.length >= 1)
-            {
-                return res.status(200).send({
-                    message: "No puedes actualizar estos datos porque ya existen."
-                });
-            }
-
-            //Si no existe ningun error
-            else
-            {
-                //El objeto buscara y actualizara
-                Employee.findOneAndUpdate({payroll: payroll}, update, {new: true}, (err, employeeUpdated) => {
-
-                    //Si existe un error en el servidor
-                    if(err) return res.status(500).send({
-                        message: "Hubo un error en la petición del servidor. Intentalo más tarde."
-                    });
-
-                    //Si la actualización tuvo un error
-                    if(!employeeUpdated) return res.status(404).send({
-                        message: "No se pudo actualizar este registro. Intentelo de nuevo."
-                    });
-
-                    else
-                    {
-                        return res.status(201).send({update: employeeUpdated});
-                    }
-                });
-            }
-        });
+        return res.status(404).send({
+            message: "No puedes dejar campos vacios."
+        })
     }
+
+    
 }
 
 //Función para eliminar datos del empleado

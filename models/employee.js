@@ -8,7 +8,7 @@ var Schema = mongoose.Schema;
 //El esquema de Employee tendra los siguientes atributos
 var EmployeeSchema = Schema({
 
-    payroll: Number,
+    payroll: String,
     name: String,
     surnameP: String,
     surnameM: String,
@@ -17,7 +17,7 @@ var EmployeeSchema = Schema({
     image: String,
     email: String,
     position: { type: Schema.ObjectId, ref: 'Position' },
-    department: { type: Schema.ObjectId, ref: 'Department' } 
+    department: { type: Schema.ObjectId, ref: 'Department' }, 
 });
 
 //Exportaremos el modelo para usarlo en otros archivos
