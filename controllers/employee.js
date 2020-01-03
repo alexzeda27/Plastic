@@ -387,8 +387,6 @@ function updateEmployee(req, res)
     //Recogemos los valores del body
     var update = req.body;
 
-    if(update)
-    {
         //Si el empleado es el administrador
 
             //El objeto buscara por el documento
@@ -399,50 +397,37 @@ function updateEmployee(req, res)
 
             ]}).exec((err, employeeRepeat) => {
 
-                //Si existe un error en el servidor
-                if(err) return res.status(500).send({
-                    message: "Hubo un error en la petición del servidor. Intentalo más tarde."
+                var employee_isset = false;
+                console.log(employeeRepeat);
+
+                employeeRepeat.forEach((employee) => {
+                    if(employee.payroll != payroll) employee_isset = true;
                 });
 
-                //Si el usuario se repite 
-                if(employeeRepeat && employeeRepeat.length >= 1)
-                {
-                    return res.status(200).send({
-                        message: "No puedes actualizar estos datos porque ya existen."
+                if(employee_isset) return res.status(500).send({
+                    message: "Los datos de este empledo ya existen."
+                });
+
+                //El objeto buscara y actualizara
+                Employee.findOneAndUpdate({payroll: payroll}, update, {new: true}, (err, employeeUpdated) => {
+
+                    //Si existe un error en el servidor
+                    if(err) return res.status(500).send({
+                        message: "Hubo un error en la petición del servidor. Intentalo más tarde."
                     });
-                }
 
-                //Si no existe ningun error
-                else
-                {
-                    //El objeto buscara y actualizara
-                    Employee.findOneAndUpdate({payroll: payroll}, update, {new: true}, (err, employeeUpdated) => {
-
-                        //Si existe un error en el servidor
-                        if(err) return res.status(500).send({
-                            message: "Hubo un error en la petición del servidor. Intentalo más tarde."
-                        });
-
-                        //Si la actualización tuvo un error
-                        if(!employeeUpdated) return res.status(404).send({
-                            message: "No se pudo actualizar este registro. Intentelo de nuevo."
-                        });
-
-                        else
-                        {
-                            return res.status(201).send({update: employeeUpdated});
-                        }
+                    //Si la actualización tuvo un error
+                    if(!employeeUpdated) return res.status(404).send({
+                        message: "No se pudo actualizar este registro. Intentelo de nuevo."
                     });
-                }
+
+                    else
+                    {
+                        return res.status(201).send({update: employeeUpdated});
+                    }
+                });
+                
             });
-    }
-    
-    else
-    {
-        return res.status(404).send({
-            message: "No puedes dejar campos vacios."
-        })
-    }
 
     
 }
@@ -493,7 +478,7 @@ function uploadImageEmployee(req, res)
         console.log(file_path);
 
         //Cortamos la imágen 
-        var file_split = file_path.split('/');
+        var file_split = file_path.split('\\');
         console.log(file_split);
 
         //Obtenemos solo el nombre de la imágen
