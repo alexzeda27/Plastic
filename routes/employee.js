@@ -19,12 +19,12 @@ var api = express.Router();
 
 //Definimos las rutas 
 api.get('/', EmployeeController.home);
-api.post('/registrar', EmployeeController.saveEmployee);
+api.post('/registrar-empleado', EmployeeController.saveEmployee);
 api.post('/login', EmployeeController.loginEmployee);
-api.get('/consultar/:payroll', EmployeeController.getEmployee);
-api.get('/consultar-paginados/:page?', EmployeeController.getEmployees);
-api.put('/actualizar/:payroll', EmployeeController.updateEmployee);
-api.delete('/eliminar/:payroll', EmployeeController.removeEmployee);
+api.get('/consultar-empleado/:payroll', EmployeeController.getEmployee);
+api.get('/consultar-empleado-paginados/:page?', EmployeeController.getEmployees);
+api.put('/actualizar-empleado/:payroll', EmployeeController.updateEmployee);
+api.delete('/eliminar-empleado/:payroll', EmployeeController.removeEmployee);
 api.post('/cargar-imagen/:payroll', md_upload, EmployeeController.uploadImageEmployee);
 api.get('/consultar-imagen/:imageFile', EmployeeController.getImageFiles);
 api.delete('/eliminar-imagen/:imageFile', EmployeeController.removeImageFiles);
