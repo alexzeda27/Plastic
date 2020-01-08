@@ -25,6 +25,8 @@ var operator_routes = require('./routes/operator');
 //Cargamos la ruta de supervisores
 var supervisor_routes = require('./routes/supervisor');
 
+var mobility_routes = require('./routes/mobility');
+
 //Middlewares
 
 //Parseamos los datos por la URI
@@ -42,6 +44,8 @@ app.use('/api/puesto', position_routes);
 app.use('/api', employee_routes);
 app.use('/api/operador', operator_routes);
 app.use('/api/supervisor', supervisor_routes);
+
+app.use('/api/movilidad', mobility_routes);
 
 //Exportar
 module.exports = app;
