@@ -9,6 +9,23 @@ function home(req, res)
     });
 }
 
+function createNewMobility(req, res)
+{
+    var params = req.body;
+
+    if(params.month && params.week && params.operatorEncounter && params.indicator)
+    {
+        
+    }
+
+    else
+    {
+        return res.status(400).send({
+            message: "No puedes dejar campos vacios en el formulario."
+        });
+    }
+}
+
 module.exports = {
     home
 }

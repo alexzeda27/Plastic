@@ -18,8 +18,6 @@ api.get('/consultar-bloque/:id', SupervisorController.getSquare);
 api.get('/consultar-bloque-paginados/:page?', SupervisorController.getSquares);
 api.put('/actualizar-bloque/:id', SupervisorController.updateSquares);
 api.delete('/eliminar-bloque/:id', SupervisorController.removeSquare);
-api.put('/agregar-numero-bloque/:id', SupervisorController.addNumberSquare);
-api.put('/eliminar-numero-bloque/:id', SupervisorController.removeNumberSquare);
 
 //Exportamos las rutas
 module.exports = api;

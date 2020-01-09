@@ -8,8 +8,7 @@ var Schema = mongoose.Schema;
 //El esquema de Square tendra los siguientes atributos
 var SquareSchema = Schema({
 
-    numberSquare: [Number],
-    department: { type: Schema.ObjectId, ref: 'Department' }
+    numberSquare: String,
 });
 
 //Exportamos el modelo para usarlo en otros archivos

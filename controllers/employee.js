@@ -437,9 +437,22 @@ function removeEmployee(req, res)
 {
     //Recogemos los parametros de payroll
     var payroll = req.params.payroll;
+    var employeeId = req.params.id;
+    var employee = req.params.employee;
+
+    var employeePosition = req.params.position;
+
+    var operatorId = req.params.id;
+    var operatorEmployee = req.params.employee;
+    var supervisorEmployee = req.params.employee;
 
     //Asignamos el id del administrador de personal
     var adminId = "5e061947c6a5b323fc1f28a9"
+
+    var modId = "5e018b937c253c4c0f44a3e3";
+    var prodSup = "5e01872f7c253c4c0f44a3c8";
+    var procSup = "5e0187267c253c4c0f44a3c7";
+
 
     //Si el empleado es el administrador
 
@@ -457,9 +470,49 @@ function removeEmployee(req, res)
             });
 
             //Si no existen errores
-            return res.status(201).send({
-                message: "Empleado eliminado correctamente."
-            });
+            else
+            {
+
+                if(employeePosition == modId)
+                {
+                    Operator.findByIdAndRemove(employeeDeleted, (err, operators) => {
+
+                        if(err) return res.status(500).send({
+                            message: "Hubo un error en la petición del servidor. Intentalo de nuevo más tarde."
+                        });
+
+                        if(!operators) return res.status(400).send({
+                            message: "Surgio un error al eliminar este operador."
+                        });
+
+                        return res.status(200).send({
+                            message: "Operador eliminado correctamente."
+                        });
+                    });
+                }
+
+                if(employeePosition == prodSup || employeePosition == procSup)
+                {
+                    Supervisor.findByIdAndRemove(employeeDeleted, (err, supervisors) => {
+
+                        if(err) return res.status(500).send({
+                            message: "Hubo un error en la petición del servidor. Intentalo de nuevo más tarde."
+                        });
+
+                        if(!supervisors) return res.status(400).send({
+                            message: "Surgio un error al eliminar a este supervisor."
+                        });
+
+                        return res.status(200).send({
+                            message: "Supervisor eliminado correctamente."
+                        });
+                    });
+                }
+
+                return res.status(200).send({
+                    message: "Empleado eliminado correctamente."
+                });
+            }
         });
 
 }

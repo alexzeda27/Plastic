@@ -43,7 +43,7 @@ app.use('/api', department_routes);
 app.use('/api/puesto', position_routes);
 app.use('/api', employee_routes);
 app.use('/api/operador', operator_routes);
-app.use('/api/supervisor', supervisor_routes);
+app.use('/api', supervisor_routes);
 
 app.use('/api/movilidad', mobility_routes);
 
