@@ -18,6 +18,9 @@ api.get('/consultar-bloque/:id', SupervisorController.getSquare);
 api.get('/consultar-bloque-paginados/:page?', SupervisorController.getSquares);
 api.put('/actualizar-bloque/:id', SupervisorController.updateSquares);
 api.delete('/eliminar-bloque/:id', SupervisorController.removeSquare);
+api.post('/crear-maquina', SupervisorController.saveMachine);
+api.get('/consultar-maquina/:id', SupervisorController.getMachine);
+api.get('/consultar-maquina-paginados/:page?', SupervisorController.getMachines);
 
 //Exportamos las rutas
 module.exports = api;

@@ -8,8 +8,7 @@ var Schema = mongoose.Schema;
 //El esquema de Maquina tendra los siguientes atributos
 var MachineSchema = Schema({
 
-    numberMachine: [Number],
-    square: { type: Schema.ObjectId, ref: 'Square' }
+    numberMachine: String,
 });
 
 //Exportamos el modelo para usarlo en otros archivos

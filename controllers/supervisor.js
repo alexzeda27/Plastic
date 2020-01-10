@@ -277,6 +277,134 @@ function removeSquare(req, res)
     });
 }
 
+//Función para agregar maquinas
+function saveMachine(req, res)
+{
+    //Recogemos los datos por el body
+    var params = req.body
+
+    //Creamos el objeto de maquina
+    var machine = new Machine();
+
+    //Si el usuario no llena los datos dle formulario
+    if(params.numberMachine)
+    {
+        //Asignamos al objeto el número de la maquina
+        machine.numberMachine = params.numberMachine;
+
+        //El objeto busca por el documento
+        Machine.find({numberMachine: machine.numberMachine}, (err, machineRepeat) => {
+
+            //Si existe un error en el servidor
+            if(err) return res.status(500).send({
+                message: "Hubo un error en la petición del servidor. Intentelo de nuevo."
+            });
+
+            //Si la maquina se repite
+            if(machineRepeat && machineRepeat.length >= 1)
+            {
+                return res.status(406).send({
+                    message: "Los datos de esta maquina ya existen. Intenta con otro."
+                });
+            }
+
+            //Si no existen errores
+            else
+            {
+                //El objeto guaradara el registro
+                machine.save((err, machineStored) => {
+
+                    //Si existe un error en el servidor
+                    if(err) return res.status(500).send({
+                        message: "Hubo un error en la petición del servidor. Intentalo de nuevo."
+                    });
+
+                    //Si existe un error al guardar los datos
+                    if(!machineStored) return res.status(406).send({
+                        message: "Hubo un error al guardar los datos. Intentalo de nuevo."
+                    });
+
+                    //Si no existen errores
+                    return res.status(201).send({machine: machineStored});
+                });
+            }
+        });
+    }
+
+    else
+    {
+        return res.status(406).send({
+            message: "No puedes dejar campos vacios en el formulario."
+        });
+    }
+}
+
+//Función para mostar los datos de la maquina
+function getMachine(req, res)
+{
+    //Recogemos el id por parametro
+    var machineId = req.params.id;
+
+    //El objeto busca por el documento el id
+    Machine.findById(machineId, (err, squares) => {
+
+        //Si existe un error en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en la petición del servidor. Intentalo de nuevo."
+        });
+
+        //Si no se encuentra la maquina solicitada
+        if(!squares) return res.status(404).send({
+            message: "No se ha encontrado la maquina solicitada. Intente con otra."
+        });
+
+        //Si no existen errores
+        return res.status(200).send({machine: squares});
+    });
+}
+
+//Función para mostrar las maquinas paginadas
+function getMachines(req, res)
+{
+    //Inicializamos la página en 1
+    var page = 1;
+
+    //Si se obtienen los parametros de la página
+    if(req.params.page)
+    {
+        //obtenemos los valores que se pasen por parametro
+        page = req.params.page;
+    }
+
+    //Objetos por página son 10
+    var itemsPerPage = 10;
+
+    //El objeto busca por el documento y despliega su contenido
+    Machine.find().sort('_id').paginate(page, itemsPerPage, (err, machines, total) => {
+
+        //Si existe un error en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en la petición del servidor. Intentalo de nuevo más tarde."
+        });
+
+        //Si no hay usuarios registrados
+        if(!machines) return res.status(404).send({
+            message: "No hay registros de empleados."
+        });
+
+        //Si no existen errores
+        else
+        {
+            //Si no existen errores, muestra los objetos paginados
+            return res.status(200).send({
+                machines,
+                total,
+                pages: Math.ceil(total/itemsPerPage)
+            });
+        }
+    });
+}
+
 
 //Exportamos las funciones
 module.exports = {
@@ -288,4 +416,7 @@ module.exports = {
     getSquares,
     updateSquares,
     removeSquare,
+    saveMachine,
+    getMachine,
+    getMachines
 }
