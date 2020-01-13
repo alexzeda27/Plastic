@@ -4,7 +4,7 @@
 var mongoose = require('mongoose');
 //Cargamos el archivo de app
 var app = require('./app');
-//Reservamos el puerto 3999
+//Reservamos el puerto 3900
 var port = 3900;
 
 //Promesa a la base de datos

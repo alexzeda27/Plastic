@@ -618,6 +618,8 @@ function removeImageFiles(req, res)
 {
     //Obtenemos el fichero
     var image_file = req.params.imageFile;
+
+    var payroll = req.params.payroll;
     //Obtenemos la ruta donde se encuentra el fichero
     var path_file = './uploads/employees/' + image_file;
 
@@ -636,9 +638,23 @@ function removeImageFiles(req, res)
                 });
 
                 //Si no existen errores
-                return res.status(201).send({
-                    message: "Imágen eliminada correctamente"
-                });
+                else
+                {
+                    Employee.findOneAndUpdate({payroll: payroll}, {$unset: {image: ""}}, (err, imageDeleted) => {
+
+                        if(err) return res.status(500).send({
+                            message: "Hubo un error en la petición del servidor. Intentalo más tarde."
+                        });
+
+                        if(!imageDeleted) return res.status(406).send({
+                            message: "Hubo un error al eliminar la imágen del documento de empleados."
+                        });
+
+                        return res.status(200).send({
+                            message: "Imágen elimnada correctamente."
+                        })
+                    });
+                }
             });
             
         } 

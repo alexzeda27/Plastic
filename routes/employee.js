@@ -27,7 +27,7 @@ api.put('/actualizar-empleado/:payroll', EmployeeController.updateEmployee);
 api.delete('/eliminar-empleado/:payroll', EmployeeController.removeEmployee);
 api.post('/cargar-imagen/:payroll', md_upload, EmployeeController.uploadImageEmployee);
 api.get('/consultar-imagen/:imageFile', EmployeeController.getImageFiles);
-api.delete('/eliminar-imagen/:imageFile', EmployeeController.removeImageFiles);
+api.put('/eliminar-imagen/:payroll/:imageFile', EmployeeController.removeImageFiles);
 
 //Exportamos las api
 module.exports = api;
