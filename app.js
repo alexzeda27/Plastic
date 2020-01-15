@@ -40,7 +40,7 @@ app.use(bodyParser.json());
 app.use('/api/tipo-trabajador', typeWorker_routes);
 app.use('/api/centro-costo', costCenter_routes);
 app.use('/api', department_routes);
-app.use('/api/puesto', position_routes);
+app.use('/api', position_routes);
 app.use('/api', employee_routes);
 app.use('/api/operador', operator_routes);
 app.use('/api', supervisor_routes);

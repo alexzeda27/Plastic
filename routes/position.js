@@ -10,11 +10,11 @@ var api = express.Router();
 
 //Definimos las rutas
 api.get('/', PositionController.home);
-api.post('/registrar', PositionController.savePosition);
-api.get('/consultar/:id', PositionController.getPosition);
-api.get('/consultar-paginados/:page?', PositionController.getPositions);
-api.put('/actualizar/:id', PositionController.updatePosition);
-api.delete('/eliminar/:id', PositionController.removePosition);
+api.post('/registrar-puesto', PositionController.savePosition);
+api.get('/consultar-puesto/:id', PositionController.getPosition);
+api.get('/consultar-puesto-paginados/:page?', PositionController.getPositions);
+api.put('/actualizar-puesto/:id', PositionController.updatePosition);
+api.delete('/eliminar-puesto/:id', PositionController.removePosition);
 
 //Exportamos las api
 module.exports = api
