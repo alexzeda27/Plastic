@@ -9,6 +9,7 @@ var Schema = mongoose.Schema;
 var SquareSchema = Schema({
 
     numberSquare: String,
+    department: { type: Schema.ObjectId, ref: 'Department'}
 });
 
 //Exportamos el modelo para usarlo en otros archivos

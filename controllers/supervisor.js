@@ -93,13 +93,19 @@ function saveSquare(req, res)
     var square = new Square();
 
     //Si el supervisor llena todo el formulario
-    if(params.numberSquare)
+    if(params.numberSquare && params.department)
     {
         //Al objeto le asignamos los valores del body
         square.numberSquare = params.numberSquare;
+        square.department = params.department;
 
         //El objeto buscara por el documento
-        Square.find({numberSquare: square.numberSquare}, (err, squareRepeat) => {
+        Square.find({$and: [
+
+            {numberSquare: square.numberSquare},
+            {department: square.department}
+            
+        ]}).exec((err, squareRepeat) => {
 
             //Si existe un error en el servidor
             if(err) return res.status(500).send({
@@ -136,6 +142,13 @@ function saveSquare(req, res)
             }
         });
     }
+
+    else
+    {
+        return res.status(406).send({
+            message: "No puedes deja campos vacios en el formulario."
+        });
+    }
 }
 
 //Función para mostrar los bloques existentes
@@ -145,7 +158,7 @@ function getSquare(req, res)
     var squareId = req.params.id;
 
     //El objeto buscara por el documento
-    Square.findById(squareId, (err, squares) => {
+    Square.findById(squareId).populate({path: 'department'}).exec((err, squares) => {
 
         //Si existe un error en el servidor
         if(err) return res.status(500).send({
@@ -161,6 +174,11 @@ function getSquare(req, res)
         return res.status(200).send({squares});
     });
 }
+
+
+//TODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+
+
 
 //Función para mostrar los bloques paginados
 function getSquares(req, res)
@@ -179,7 +197,7 @@ function getSquares(req, res)
     var itemsPerPage = 10;
 
     //El objeto busca por el documento y despliega su contenido
-    Square.find().sort('_id').paginate(page, itemsPerPage, (err, squares, total) => {
+    Square.find().sort('_id').populate({path: 'department'}).paginate(page, itemsPerPage, (err, squares, total) => {
 
         //Si existe un error en el servidor
         if(err) return res.status(500).send({
@@ -405,6 +423,91 @@ function getMachines(req, res)
     });
 }
 
+//Función para actualizar maquinas
+function updateMachines(req, res)
+{
+    //Obtenemos el id de la maquina
+    var machineId = req.params.id;
+
+    //Obtenemos los datos a actualizar
+    var update = req.body;
+
+    //Si el usuario no ingresa todos los campos del formulario
+    if(update.numberMachine)
+    {
+        //El objeto buscara si hay alguna maquina repetida
+        Machine.find({numberMachine: update.numberMachine}, (err, machineRepeat) => {
+
+            //Si existe un error en el servidor
+            if(err) return res.status(500).send({
+                message: "Hubo un error en la petición del servidor. Intentalo de nuevo más tarde."
+            });
+
+            //Si la maquina ya existe en la base de datos
+            if(machineRepeat && machineRepeat.length >= 1)
+            {
+                return res.status(406).send({
+                    message: "Esta número de maquina ya existe. Prueba con otro número."
+                });
+            } 
+
+            //Si no existen errores
+            else
+            {
+                //El objeto buscara por el documento el id
+                Machine.findByIdAndUpdate(machineId, update, {new:true}, (err, machineUpdated) => {
+
+                    //Si existe un error en el servidor
+                    if(err) return res.status(500).send({
+                        message: "Hubo un error en la petición del servidor. Intentalo de nuevo más tarde."
+                    });
+
+                    //Si existe un error al actualiza el objeto
+                    if(!machineUpdated) return res.status(406).send({
+                        message: "Hubo un error al actualizar esta maquina. Intentalo de nuevo."
+                    });
+
+                    //Si no existen errores
+                    return res.status(201).send({update: machineUpdated});
+                });
+            }
+        });
+    }
+
+    else
+    {
+        return res.status(406).send({
+            message: "No puedes dejar campos vacios en el formulario."
+        });
+    }
+}
+
+//Función para eliminar maquinas
+function removeMachine(req, res)
+{
+    //Obtenemos el id de la maquina por parametro
+    var machineId = req.params.id;
+
+    //El objeto busca el documento por el id
+    Machine.findByIdAndRemove(machineId, (err, machineRemoved) => {
+
+        //Si existe un error en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+        });
+
+        //Si existe un error al eliminar la maquina
+        if(!machineRemoved) return res.status(406).send({
+            message: "Hubo un error al eliminar la maquina. Intentalo de nuevo."
+        });
+
+        //Si no existen errores
+        return res.status(201).send({
+            message: "Maquina eliminada correctamente."
+        });
+    });
+}
+
 
 //Exportamos las funciones
 module.exports = {
@@ -418,5 +521,7 @@ module.exports = {
     removeSquare,
     saveMachine,
     getMachine,
-    getMachines
+    getMachines,
+    updateMachines,
+    removeMachine
 }

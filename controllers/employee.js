@@ -651,7 +651,7 @@ function removeImageFiles(req, res)
                         });
 
                         return res.status(200).send({
-                            message: "Imágen elimnada correctamente."
+                            message: "Imágen eliminada correctamente."
                         })
                     });
                 }

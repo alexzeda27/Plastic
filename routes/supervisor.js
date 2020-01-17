@@ -21,6 +21,8 @@ api.delete('/eliminar-bloque/:id', SupervisorController.removeSquare);
 api.post('/crear-maquina', SupervisorController.saveMachine);
 api.get('/consultar-maquina/:id', SupervisorController.getMachine);
 api.get('/consultar-maquina-paginados/:page?', SupervisorController.getMachines);
+api.put('/actualizar-maquina/:id', SupervisorController.updateMachines);
+api.delete('/eliminar-maquina/:id', SupervisorController.removeMachine);
 
 //Exportamos las rutas
 module.exports = api;
