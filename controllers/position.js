@@ -185,6 +185,37 @@ function getPositions(req, res)
     });
 }
 
+//Función para obtener puestos sin paginar
+function getPositionsOnly(req, res)
+{
+    Position.find().populate({path: 'costCenter'}).exec((err, positions) => {
+
+        if(err) return res.status(500).send({
+            message: "Hubo un error en la petición del servidor. Intentalo más tarde."
+        });
+
+        if(!positions) return res.status(406).send({
+            message: "Hubo un error al listar los registros."
+        });
+
+        else
+        {
+            TypeWorker.populate(positions, {path: 'typeWorker'}, (err, doc) => {
+
+                if(err) return res.status(500).send({
+                    message: "Hubo un error en la petición del servidor. Intentalo más tarde."
+                });
+
+                if(!doc) return res.status(404).send({
+                    message: "Hubo un error al listar los registros."
+                });
+
+                return res.status(200).send({positions});
+            });
+        }
+    });
+}
+
 //Función para actualizar los datos de puestos
 function updatePosition(req, res)
 {
@@ -276,6 +307,7 @@ module.exports = {
     savePosition,
     getPosition,
     getPositions,
+    getPositionsOnly,
     updatePosition,
     removePosition
 }

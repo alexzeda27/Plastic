@@ -13,6 +13,7 @@ api.get('/', DepartmentController.home);
 api.post('/registrar-departamento', DepartmentController.saveDepartment);
 api.get('/consultar-departamento/:id', DepartmentController.getDepartment);
 api.get('/consultar-departamento-paginados/:page?', DepartmentController.getDepartments);
+api.get('/consultar-departamentos', DepartmentController.getDepartmentsOnly);
 api.put('/actualizar-departamento/:id', DepartmentController.updateDepartment);
 api.delete('/eliminar-departamento/:id', DepartmentController.removeDepartment);
 

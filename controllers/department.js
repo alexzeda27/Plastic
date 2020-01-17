@@ -145,6 +145,27 @@ function getDepartments(req, res)
     });
 }
 
+//Función para listar sin paginar
+function getDepartmentsOnly(req, res)
+{
+    Department.find((err, departments) => {
+        
+        if(err) return res.status(500).send({
+            message: "Hubo un error en la petición del servidor. Intentalo de nuevo más tarde."
+        });
+
+        if(!departments) return res.status(406).send({
+            message: "Surgio un error al listar los registros."
+        });
+
+        else
+        {
+            return res.status(200).send({departments});
+        }
+        
+    });
+}
+
 //Función para actualizar los departamentos
 function updateDepartment(req, res)
 {
@@ -240,6 +261,7 @@ module.exports = {
     saveDepartment,
     getDepartment,
     getDepartments,
+    getDepartmentsOnly,
     updateDepartment,
     removeDepartment
 }

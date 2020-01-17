@@ -13,6 +13,7 @@ api.get('/', PositionController.home);
 api.post('/registrar-puesto', PositionController.savePosition);
 api.get('/consultar-puesto/:id', PositionController.getPosition);
 api.get('/consultar-puesto-paginados/:page?', PositionController.getPositions);
+api.get('/consultar-puestos', PositionController.getPositionsOnly);
 api.put('/actualizar-puesto/:id', PositionController.updatePosition);
 api.delete('/eliminar-puesto/:id', PositionController.removePosition);
 
