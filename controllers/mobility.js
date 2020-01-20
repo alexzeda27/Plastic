@@ -1,5 +1,8 @@
 'use strict'
 
+//Importamos la libreria moment
+var moment = require('moment');
+
 //Importamos el modelo de mobilidad
 var Mobilitie = require('../models/mobility');
 //Importamos el modelo de registro
@@ -21,6 +24,9 @@ function createRegister(req, res)
 
     //Creamos el objeto de registro
     var register = new Register();
+
+    //Creamos el objeto moment
+    var now = moment();
 
     //Si el usuario llena todo el formulario
     if(params.month && params.week && params.day)

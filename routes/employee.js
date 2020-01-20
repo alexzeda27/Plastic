@@ -23,6 +23,7 @@ api.post('/registrar-empleado', EmployeeController.saveEmployee);
 api.post('/login', EmployeeController.loginEmployee);
 api.get('/consultar-empleado/:payroll', EmployeeController.getEmployee);
 api.get('/consultar-empleado-paginados/:page?', EmployeeController.getEmployees);
+api.get('/consultar-empleados', EmployeeController.getEmployeesOnly);
 api.put('/actualizar-empleado/:payroll', EmployeeController.updateEmployee);
 api.delete('/eliminar-empleado/:payroll', EmployeeController.removeEmployee);
 api.post('/cargar-imagen/:payroll', md_upload, EmployeeController.uploadImageEmployee);

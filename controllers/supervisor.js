@@ -12,6 +12,8 @@ var Customer = require('../models/customer');
 var Product = require('../models/products');
 //Cargamos el modelo de operadores
 var Operator = require('../models/operator');
+//Cargamos el modelo de empleados
+var Employee = require('../models/employee');
 
 //Función principal
 function home(req, res)
@@ -819,9 +821,8 @@ function createProducts(req, res)
         //El objeto buscara en el documento un registro repetido
         Product.find({$or: [
 
+            {nameProduct: product.nameProduct},
             {serialNumber: product.serialNumber},
-            {version: product.version},
-            {customer: product.customer}
 
         ]}).exec((err, productRepeat) => {
 
@@ -1200,6 +1201,54 @@ function updateOperator(req, res)
     });
 }
 
+//Función para obtener operadores
+function getOperators(req, res)
+{
+    //El objeto buscara los registros
+    Operator.find().populate({path: 'employee', populate: [{path: 'position', populate: [{path: 'typeWorker'}, 
+    {path: 'costCenter'}]}, {path: 'department'}]}).exec((err, operators) => {
+
+        //Si existe un error en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en el servidor. Intentalo de nuevo maás tarde."
+        });
+
+        //Si no existen operadores
+        if(!operators) return res.status(404).send({
+            message: "No hay ningun operador registrado."
+        });
+
+        //Si no existen errores
+        return res.status(200).send({operators});
+    });
+}
+
+//Función para eliminar operadores
+function removeOperator(req, res)
+{
+    //Obtenemos el id por parametro
+    var operatorId = req.params.id;
+
+    //El objeto eliminara el registro de operadores
+    Operator.findByIdAndRemove(operatorId, (err, operatorDeleted) => {
+
+        //Si existe un error en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+        });
+
+        //Si no existe el operador
+        if(!operatorDeleted) return res.status(404).send({
+            message: "El operador no existe."
+        });
+
+        //Si no existen errores
+        return res.status(201).send({
+            message: "Operado eliminado con exito."
+        })
+    });
+}
+
 //Exportamos las funciones
 module.exports = {
     home,
@@ -1229,5 +1278,7 @@ module.exports = {
     getProducts,
     updateProduct,
     removeProduct,
-    updateOperator
+    updateOperator,
+    getOperators,
+    removeOperator
 }

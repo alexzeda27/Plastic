@@ -38,6 +38,8 @@ api.get('/consultar-producto-paginados/:page?', SupervisorController.getProducts
 api.put('/actualizar-producto/:id', SupervisorController.updateProduct);
 api.delete('/eliminar-producto/:id', SupervisorController.removeProduct);
 api.put('/actualizar-operador/:id', SupervisorController.updateOperator);
+api.get('/consultar-operadores', SupervisorController.getOperators);
+api.delete('/eliminar-operador/:id', SupervisorController.removeOperator);
 
 //Exportamos las rutas
 module.exports = api;

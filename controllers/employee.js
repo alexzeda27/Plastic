@@ -378,6 +378,27 @@ function getEmployees(req, res)
     });
 }
 
+//Función para obtener los datos de los empleados
+function getEmployeesOnly(req, res)
+{
+    //El objeto buscara el documento
+    Employee.find().populate([{path: 'position', populate: [{path: 'typeWorker'}, {path: 'costCenter'}]}, {path: 'department'}]).exec((err, employees) => {
+
+        //Si existe un error en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+        });
+
+        //Si no existen empleado registrados
+        if(!employees) return res.status(404).send({
+            message: "No se encontro ningun empleado."
+        });
+
+        //Si no existen errores
+        return res.status(200).send({employees});
+    });
+}
+
 //Función para actualizar los datos del empleado
 function updateEmployee(req, res)
 {
@@ -676,6 +697,7 @@ module.exports = {
     loginEmployee,
     getEmployee,
     getEmployees,
+    getEmployeesOnly,
     updateEmployee,
     removeEmployee,
     uploadImageEmployee,
