@@ -20,11 +20,9 @@ var department_routes = require('./routes/department');
 var position_routes = require('./routes/position');
 //Cargamos la ruta de empleados
 var employee_routes = require('./routes/employee');
-//Cargamos la ruta de operadores
-var operator_routes = require('./routes/operator');
 //Cargamos la ruta de supervisores
 var supervisor_routes = require('./routes/supervisor');
-
+//Cargamos la ruta de movilidad
 var mobility_routes = require('./routes/mobility');
 
 //Middlewares
@@ -42,10 +40,8 @@ app.use('/api/centro-costo', costCenter_routes);
 app.use('/api', department_routes);
 app.use('/api', position_routes);
 app.use('/api', employee_routes);
-app.use('/api/operador', operator_routes);
 app.use('/api', supervisor_routes);
-
-app.use('/api/movilidad', mobility_routes);
+app.use('/api', mobility_routes);
 
 //Exportar
 module.exports = app;

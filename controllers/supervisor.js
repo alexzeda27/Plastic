@@ -6,6 +6,10 @@ var Supervisor = require('../models/supervisor');
 var Square = require('../models/square');
 //Cargamos el modelo de maquinas
 var Machine = require('../models/machine');
+//Cargamos el modelo de cliente
+var Customer = require('../models/customer');
+//Cargamos el modelo de roducto
+var Product = require('../models/products');
 //Cargamos el modelo de operadores
 var Operator = require('../models/operator');
 
@@ -175,9 +179,26 @@ function getSquare(req, res)
     });
 }
 
+//Función para listar todos los objetos sin paginar
+function getSquaresOnly(req, res)
+{
+    //El objeto busca en el documento
+    Square.find().populate({path: 'department'}).exec((err, squares) => {
 
-//TODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+        //Si existe un error en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en la petición del servidor. Intentalo de nuevo más tarde."
+        });
 
+        //Si existe un error al mostrar los objetos
+        if(!squares) return res.status(404).send({
+            message: "Bloques no encontrados."
+        });
+
+        //Si no existen errores
+        return res.status(200).send({squares});
+    });
+}
 
 
 //Función para mostrar los bloques paginados
@@ -231,7 +252,12 @@ function updateSquares(req, res)
     var update = req.body;
 
     //El objeto Bloque buscara por el documento
-    Square.find({numberSquare: update.numberSquare}, (err, squareRepeat) => {
+    Square.find({$and: [
+
+        {numberSquare: update.numberSquare},
+        {department: update.department},
+        
+    ]}).exec((err, squareRepeat) => {
 
         //Si existe un error en el servidor
         if(err) return res.status(500).send({
@@ -305,13 +331,19 @@ function saveMachine(req, res)
     var machine = new Machine();
 
     //Si el usuario no llena los datos dle formulario
-    if(params.numberMachine)
+    if(params.numberMachine && params.square)
     {
         //Asignamos al objeto el número de la maquina
         machine.numberMachine = params.numberMachine;
+        machine.square = params.square;
 
         //El objeto busca por el documento
-        Machine.find({numberMachine: machine.numberMachine}, (err, machineRepeat) => {
+        Machine.find({$and: [
+
+            {numberMachine: machine.numberMachine},
+            {square: machine.square}
+
+        ]}).exec((err, machineRepeat) => {
 
             //Si existe un error en el servidor
             if(err) return res.status(500).send({
@@ -364,7 +396,7 @@ function getMachine(req, res)
     var machineId = req.params.id;
 
     //El objeto busca por el documento el id
-    Machine.findById(machineId, (err, squares) => {
+    Machine.findById(machineId).populate({path: 'square', populate: [{path: 'department'}]}).exec((err, machines) => {
 
         //Si existe un error en el servidor
         if(err) return res.status(500).send({
@@ -372,12 +404,33 @@ function getMachine(req, res)
         });
 
         //Si no se encuentra la maquina solicitada
-        if(!squares) return res.status(404).send({
+        if(!machines) return res.status(404).send({
             message: "No se ha encontrado la maquina solicitada. Intente con otra."
         });
 
         //Si no existen errores
-        return res.status(200).send({machine: squares});
+        return res.status(200).send({machines});
+    });
+}
+
+//Función para listar las maquinas sin paginar
+function getMachinesOnly(req, res)
+{
+    //El objeto buscara la colección
+    Machine.find().populate({path: 'square', populate: [{path: 'department'}]}).exec((err, machines) => {
+
+        //Si existe un error en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+        });
+
+        //Si no existen documento de maquinas
+        if(!machines) return res.status(404).send({
+            message: "No hay maquinas para mostrar."
+        });
+
+        //Si no existen errores
+        return res.status(200).send({machines});
     });
 }
 
@@ -398,7 +451,7 @@ function getMachines(req, res)
     var itemsPerPage = 10;
 
     //El objeto busca por el documento y despliega su contenido
-    Machine.find().sort('_id').paginate(page, itemsPerPage, (err, machines, total) => {
+    Machine.find().sort('_id').populate({path: 'square', populate: [{path: 'department'}]}).paginate(page, itemsPerPage, (err, machines, total) => {
 
         //Si existe un error en el servidor
         if(err) return res.status(500).send({
@@ -433,10 +486,15 @@ function updateMachines(req, res)
     var update = req.body;
 
     //Si el usuario no ingresa todos los campos del formulario
-    if(update.numberMachine)
+    if(update.numberMachine && update.square)
     {
         //El objeto buscara si hay alguna maquina repetida
-        Machine.find({numberMachine: update.numberMachine}, (err, machineRepeat) => {
+        Machine.find({$and: [
+
+            {numberMachine: update.numberMachine},
+            {square: update.square}
+
+        ]}).exec((err, machineRepeat) => {
 
             //Si existe un error en el servidor
             if(err) return res.status(500).send({
@@ -508,6 +566,639 @@ function removeMachine(req, res)
     });
 }
 
+//Función para agregar clientes
+function createCustomer(req, res)
+{
+    //Recogemos los datos del body
+    var params = req.body;
+
+    //Creamos el objeto de Customer
+    var customer = new Customer();
+
+    //Si el usuario llena el formulario
+    if(params.customerName)
+    {
+        //Al objeto le asignamos los valores del body
+        customer.customerName = params.customerName;
+
+        //El objeto buscara valores repetidos
+        Customer.find({customerName: customer.customerName.toLowerCase()}).exec((err, customerRepeat) => {
+
+            //Si existe un error en el servidor
+            if(err) return res.status(500).send({
+                message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+            });
+
+            if(customerRepeat && customerRepeat.length >= 1)
+            {
+                return res.status(406).send({
+                    message: "Ese cliente ya existe. Intente con otro."
+                });
+            }
+
+            //Si no se repite
+            else
+            {
+                customer.save((err, customerStored) => {
+
+                    //Si existe un error en el servidor
+                    if(err) return res.status(500).send({
+                        message: "Hubo un error en el servidor. Intentalo de nuevo más tarde"
+                    });
+
+                    //Si existe un error al almacenar el registro
+                    if(!customerStored) return res.status(406).send({
+                        message: "No se pudo guardar el registro. Intentalo de nuevo"
+                    });
+
+                    //Si no existen errores
+                    return res.status(201).send({customer: customerStored});
+                });
+            }
+        })
+    }
+
+    //Si el usuario no llena el formulario
+    else
+    {
+        return res.status(406).send({
+            message: "No puedes dejar campos vacios en el formulario."
+        });
+    }
+}
+
+//Función para obtener los datos de un cliente
+function getCustomer(req, res)
+{
+    //Recogemos el id por parametro
+    var customerId = req.params.id;
+
+    //El objeto buscara por el documento los datos
+    Customer.findById(customerId, (err, customers) => {
+
+        //Si existe un error en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+        });
+
+        //Si no encuentra registros
+        if(!customers) return res.status(404).send({
+            message: "No se han encontrado el registro de este cliente. Intenta con otro."
+        });
+
+        //Si no existen errores
+        return res.status(200).send({customers});
+    });
+}
+
+//Función para obtener todos los clientes sin paginar
+function getCustomersOnly(req, res)
+{
+    Customer.find((err, customers) => {
+
+        //Si existen errores en el servidor.
+        if(err) return res.status(500).send({
+            message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+        });
+
+        //Si no encuentra ningun registro de clientes
+        if(!customers) return res.status(404).send({
+            message: "No existen registros de clientes."
+        });
+
+        //Si no existen errores
+        return res.status(200).send({customers});
+    });
+}
+
+//Función para listar clientes paginados
+function getCustomers(req, res)
+{
+    //Inicializamos la página en 1
+    var page = 1;
+
+    //Si se obtienen los parametros de la página
+    if(req.params.page)
+    {
+        //obtenemos los valores que se pasen por parametro
+        page = req.params.page;
+    }
+
+    //Objetos por página son 10
+    var itemsPerPage = 10;
+
+    //El objeto busca por el documento y despliega su contenido
+    Customer.find().sort('_id').paginate(page, itemsPerPage, (err, customers, total) => {
+
+        //Si existe un error en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en la petición del servidor. Intentalo de nuevo más tarde."
+        });
+
+        //Si no hay usuarios registrados
+        if(!customers) return res.status(404).send({
+            message: "No hay registros de empleados."
+        });
+
+        //Si no existen errores
+        else
+        {
+            //Si no existen errores, muestra los objetos paginados
+            return res.status(200).send({
+                customers,
+                total,
+                pages: Math.ceil(total/itemsPerPage)
+            });
+        }
+    });
+}
+
+//Función para actualizar clientes
+function updateCustomer(req, res)
+{
+    //Obtenemos el id del cliente
+    var customerId = req.params.id;
+
+    //Recogemos los datos del body
+    var update = req.body;
+
+    //Si el usuario llena todo el formulario
+    if(update.customerName)
+    {
+        //El objeto buscara por el documento
+        Customer.find({customerName: update.customerName.toLowerCase()}).exec((err, customerRepeat) => {
+
+            //Si existe un error en el servidor
+            if(err) return res.status(500).send({
+                message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+            });
+
+            //Si existe un cliente igual
+            if(customerRepeat && customerRepeat.length >= 1)
+            {
+                return res.status(406).send({
+                    message: "No puedes actualizar a este cliente porque ya existe. Prueba con otro."
+                });
+            }
+
+            //Si no hay clientes repetidos
+            else
+            {
+                Customer.findByIdAndUpdate(customerId, update, {new: true}, (err, customerUpdated) => {
+
+                    //Si existen errores en el servidor
+                    if(err) return res.status(500).send({
+                        message: "Hubo un error en el servidor. Intentalo más tarde."
+                    });
+
+                    //Si existe un error al actualizar el cliente
+                    if(!customerUpdated) return res.status(406).send({
+                        message: "Hubo un error al actualizar el cliente. Intentelo de nuevo."
+                    });
+
+                    //Si no existen errores
+                    return res.status(201).send({update: customerUpdated});
+                });
+            }
+        });
+    }
+
+    //Si el usuario no llena todo el formulario
+    else
+    {
+        return res.status(406).send({
+            message: "No puedes dejar campos vacios en el formulario."
+        });
+    }
+}
+
+//Función para eliminar clientes
+function removeCustomer(req, res)
+{
+    //Recogemos el id por parametro
+    var customerId = req.params.id;
+
+    //Buscamos el objeto por el documento
+    Customer.findByIdAndRemove(customerId, (err, customerRemoved) => {
+
+        //Si existe un error en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+        });
+
+        //Si el objeto no existe
+        if(!customerRemoved) return res.status(404).send({
+            message: "El cliente no existe. Intenta con otro."
+        });
+
+        //SI no existen errores
+        return res.status(201).send({
+            message: "Cliente eliminado con exito."
+        });
+    });
+}
+
+//Función para crear productos
+function createProducts(req, res)
+{
+    //Recogemos lod datos del body
+    var params = req.body;
+
+    //Creamos el objeto de poducto
+    var product = new Product();
+
+    //Si el usuario llena todo el formulario
+    if(params.nameProduct && params.serialNumber && params.version && params.customer)
+    {
+        //Asignamos los datos al objeto
+        product.nameProduct = params.nameProduct;
+        product.serialNumber = params.serialNumber;
+        product.version = params.version;
+        product.customer = params.customer;
+
+        //El objeto buscara en el documento un registro repetido
+        Product.find({$or: [
+
+            {serialNumber: product.serialNumber},
+            {version: product.version},
+            {customer: product.customer}
+
+        ]}).exec((err, productRepeat) => {
+
+            //Si existen errores en el servidor.
+            if(err) return res.status(500).send({
+                message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+            });
+
+            //Si el producto se repite
+            if(productRepeat && productRepeat.length >= 1)
+            {
+                return res.status(406).send({
+                    message: "Este registro ya existe en la base de datos."
+                });
+            }
+
+            //Si no existen errores
+            else
+            {
+                //EL objeto guardara el registro
+                product.save((err, productStored) => {
+
+                    //Si existe un error en el servidor
+                    if(err) return res.status(500).send({
+                        message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+                    });
+
+                    //Si existe un error al guardar el registro
+                    if(!productStored) return res.status(406).send({
+                        message: "Hubo un error al guardar este registro. Intentalo de nuevo."
+                    });
+
+                    //Si no existen errores
+                    return res.status(201).send({product: productStored});
+                });
+            }
+        });
+    }
+
+    //Si el usuario no llena todos los datos del formulario
+    else
+    {
+        return res.status(406).send({
+            message: "No puedes dejar campos vacios en el formulario."
+        });
+    }
+}
+
+//Función para obtener datos de un producto
+function getProduct(req, res)
+{
+    //Recogemos el id por parametro
+    var productId = req.params.id;
+
+    //El objeto buscara el documento
+    Product.findById(productId).populate({path: 'customer'}).exec((err, products) => {
+
+        //Si existe un error en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+        });
+
+        //Si el objeto no encuentra el documento
+        if(!products) return res.status(404).send({
+            message: "No se encontro el registro. Intenta con otro."
+        });
+
+        //Si no existen errores
+        return res.status(200).send({products});
+    });
+}
+
+//Función para obtener todos los productos sin paginar
+function getProductsOnly(req, res)
+{
+    //EL objeto buscara el documento
+    Product.find().populate({path: 'customer'}).exec((err, products) => {
+
+        //Si existe un error en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+        });
+
+        //Si no existen registros
+        if(!products) return res.status(404).send({
+            message: "No se encontraron registros de productos."
+        });
+
+        //Si no existen errores
+        return res.status(200).send({products});
+    });
+}
+
+//Función para obtener los datos paginados
+function getProducts(req, res)
+{
+    //Inicializamos la página en 1
+    var page = 1;
+
+    //Si se obtienen los parametros de la página
+    if(req.params.page)
+    {
+        //obtenemos los valores que se pasen por parametro
+        page = req.params.page;
+    }
+
+    //Objetos por página son 10
+    var itemsPerPage = 10;
+
+    //El objeto busca por el documento y despliega su contenido
+    Product.find().sort('_id').populate({path: 'customer'}).paginate(page, itemsPerPage, (err, products, total) => {
+
+        //Si existe un error en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en la petición del servidor. Intentalo de nuevo más tarde."
+        });
+
+        //Si no hay usuarios registrados
+        if(!products) return res.status(404).send({
+            message: "No hay registros de empleados."
+        });
+
+        //Si no existen errores
+        else
+        {
+            //Si no existen errores, muestra los objetos paginados
+            return res.status(200).send({
+                products,
+                total,
+                pages: Math.ceil(total/itemsPerPage)
+            });
+        }
+    });    
+}
+
+//Función para actualizar productos
+function updateProduct(req, res)
+{
+    //Recogemos el id por parametro
+    var productId = req.params.id;
+
+    //Recogemos los datos del body
+    var update = req.body;
+
+    //El objeto buscara un documento repetido
+    Product.find({$or: [
+        
+        {serialNumber: update.serialNumber},
+        {version: update.version},
+        {customer: update.customer}
+
+    ]}).exec((err, productRepeat) => {
+
+        //Si existe un error en el servidor.
+        if(err) return res.status(500).send({
+            message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+        });
+
+        //Si el registro se repite
+        if(productRepeat && productRepeat.length >= 1)
+        {
+            return res.status(406).send({
+                message: "No se puede actualizar porque este registro ya existe."
+            });
+        }
+
+        //Si el documento no se repite
+        else
+        {
+            //EL objeto actualizara el documento
+            Product.findByIdAndUpdate(productId, update, {new: true}, (err, productUpdated) => {
+
+                //Si existe un error en el servidor
+                if(err) return res.status(500).send({
+                    message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+                });
+
+                //Si existe un error al actualizar
+                if(!productUpdated) return res.status(406).send({
+                    message: "Hubo un error al actualizar el registro. Intentalo de nuevo."
+                });
+
+                //Si no existen errores
+                return res.status(201).send({update: productUpdated});
+            });
+        }
+    });
+}
+
+//Función para eliminar productos
+function removeProduct(req, res)
+{
+    //Obtenemos el id del producto
+    var productId = req.params.id;
+
+    //El objeto buscara el documento
+    Product.findByIdAndRemove(productId, (err, productRemoved) => {
+
+        //Si existen errores en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+        });
+
+        //Si el registro no existe
+        if(!productRemoved) return res.status(404).send({
+            message: "No se encontro el registro. Intenta con otro."
+        });
+
+        //Si no existen errores
+        return res.status(201).send({
+            message: "Producto eliminado con exito."
+        });
+    });
+}
+
+//Función para actualizar el operador
+function updateOperator(req, res)
+{
+    //Obtenemos el numero de nomina del operador
+    var operatorId = req.params.id;
+
+    //Obtenemos los datos del body
+    var update = req.body;
+
+    //El objeto buscara el payroll
+    Operator.findById(operatorId, (err, operatorUpdated) => {
+
+        //Si existe un error en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+        });
+
+        //Si el objeto no encuntra el operador
+        if(!operatorUpdated) return res.status(404).send({
+            message: "No se encontro el operador. Intenta con otro."
+        });
+
+        //Si el operador existe
+        else
+        {
+            //Creamos una bandera para bloques
+            var flagSquare = false;
+            //Creamos una bandera para maquinas
+            var flagMachine = false;
+
+            //El bucle recorrera nuestro arreglo de bloques
+            for(var i = 0; i < operatorUpdated.square.length; i++)
+            {
+                //Si encuentra una coincidencia en bloques
+                if(operatorUpdated.square[i] == update.square)
+                {
+                    //Cambia la bandera a true
+                    flagSquare = true;
+                    break;
+                }
+            }
+
+            //EL bucle recorrera el arreglo de maquinas
+            for(var i = 0; i < operatorUpdated.machine.length; i++)
+            {
+                //Si encuentra una coincidencia en maquinas
+                if(operatorUpdated.machine[i] == update.machine)
+                {
+                    //Cambia la bandera a true
+                    flagMachine = true;
+                    break;
+                }
+            }
+
+            //Si lo que se va a actulizar es el bloque
+            if(update.square)
+            {
+                //Si la bandera de bloques es true
+                if(flagSquare == true) return res.status(406).send({
+                    message: "No puedes agregar este bloque porque ya esta registrado en el operador."
+                });
+
+                //Si la bandera es falsa
+                else
+                {
+                    //El objeto buscara y actualizara los datos
+                     return Operator.findByIdAndUpdate(operatorId, {$push: {square: [update.square]}}, {new: true}, (err, operatorUpdated) => {
+
+                        //Si existe un error en el servidor
+                        if(err) return res.status(500).send({
+                            message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+                        });
+
+                        //Si existe un error al actualizar los datos
+                        if(!operatorUpdated) return res.status(406).send({
+                            message: "Ocurrio un error al actualizar los datos del operador."
+                        });
+
+                        //Si no existen errores
+                        return res.status(201).send({update: operatorUpdated});
+                    });
+                }
+            }
+
+            //Si lo que se actualizara es la maquina
+            if(update.machine)
+            {
+                //Si la bandera de maquinas es true
+                if(flagMachine == true) return res.status(406).send({
+                    message: "No puedes agregar esta maquina porque ya esta registrada en el operador."
+                });
+
+                //Si la bandera es falsa
+                else
+                {
+                    //El objeto buscara y actualizara los datos
+                     return Operator.findByIdAndUpdate(operatorId, {$push: {machine: [update.machine]}}, {new: true}, (err, operatorUpdated) => {
+
+                        //Si existe un error en el servidor
+                        if(err) return res.status(500).send({
+                            message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+                        });
+
+                        //Si existe un error al actualizar los datos
+                        if(!operatorUpdated) return res.status(406).send({
+                            message: "Ocurrio un error al actualizar los datos del operador."
+                        });
+
+                        //Si no existen errores
+                        return res.status(201).send({update: operatorUpdated});
+
+                    });
+                }
+            }
+
+            //Si lo que se actualizara son ambas
+            if(update.square && update.machine)
+            {
+                console.log(update.machine);
+                console.log(update.square);
+
+                //El objeto buscara y actualizara los datos
+                 return Operator.findByIdAndUpdate(operatorId, {$push: {square: [update.square], machine: [update.machine]}}, {new: true}, (err, operatorUpdated) => {
+
+                    //Si existe un error en el servidor
+                    if(err) return res.status(500).send({
+                        message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+                    });
+
+                    //Si existe un error al actualizar los datos
+                    if(!operatorUpdated) return res.status(406).send({
+                        message: "Ocurrio un error al actualizar los datos del operador."
+                    });
+
+                    //Si no existen errores
+                    return res.status(201).send({update: operatorUpdated});
+                });
+            }
+
+            //Si no se actualiza ninguna de ellas
+            else
+            {
+                //El objeto buscara y actualizara los datos
+                return Operator.findByIdAndUpdate(operatorId, update, {new: true}, (err, operatorUpdated) => {
+
+                    //Si existe un error en el servidor
+                    if(err) return res.status(500).send({
+                        message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+                    });
+
+                    //Si existe un error al actualizar los datos
+                    if(!operatorUpdated) return res.status(406).send({
+                        message: "Ocurrio un error al actualizar los datos del operador."
+                    });
+
+                    //Si no existen errores
+                    return res.status(201).send({update: operatorUpdated});
+                });
+            }
+        }
+    });
+}
 
 //Exportamos las funciones
 module.exports = {
@@ -516,12 +1207,27 @@ module.exports = {
     getSupervisors,
     saveSquare,
     getSquare,
+    getSquaresOnly,
     getSquares,
     updateSquares,
     removeSquare,
     saveMachine,
     getMachine,
+    getMachinesOnly,
     getMachines,
     updateMachines,
-    removeMachine
+    removeMachine,
+    createCustomer,
+    getCustomer,
+    getCustomersOnly,
+    getCustomers,
+    updateCustomer,
+    removeCustomer,
+    createProducts,
+    getProduct,
+    getProductsOnly,
+    getProducts,
+    updateProduct,
+    removeProduct,
+    updateOperator
 }

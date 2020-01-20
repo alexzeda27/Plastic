@@ -9,8 +9,8 @@ var Schema = mongoose.Schema;
 var OperatorSchema = Schema({
 
     employee: { type: Schema.ObjectId, ref: 'Employee' },
-    square: { type : Schema.ObjectId, ref: 'Square' },
-    machine: { type: Schema.ObjectId, ref: 'Machine' },
+    square: [{ type : Schema.ObjectId, ref: 'Square' }],
+    machine: [{ type: Schema.ObjectId, ref: 'Machine' }],
     turn: { type: Schema.ObjectId, ref: 'Turn' }
 });
 

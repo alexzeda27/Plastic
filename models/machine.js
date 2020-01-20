@@ -9,6 +9,7 @@ var Schema = mongoose.Schema;
 var MachineSchema = Schema({
 
     numberMachine: String,
+    square: { type: Schema.ObjectId, ref: 'Square' }
 });
 
 //Exportamos el modelo para usarlo en otros archivos
