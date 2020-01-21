@@ -286,6 +286,65 @@ function getMobility(req, res)
     });
 }
 
+//Función para actualizar listado de movilidad
+function updateMobility(req, res)
+{
+    //Obtenemos el id
+    var mobilityid = req.params;
+
+    //Obtenemos los datos del body
+    var update = req.body;
+
+    if(update.hour && update.indicator && update.observations && update.department && 
+        update.square && update.machine && update.operator && update.register)
+    {
+        //El objeto buscara documentos repetidos
+        Mobilitie.find({hour: update.hour}, (err, mobilityRepeat) => {
+            
+            //Si existen errores en el servidor
+            if(err) return res.status(500).send({
+                message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+            });
+
+            //Si la mobilidad ya existe
+            if(mobilityRepeat && mobilityRepeat.length >= 1)
+            {
+                return res.status(406).send({
+                    message: "No se puede actualizar el registro porque ya existe."
+                });
+            }
+
+            //Si la movilidad no se repite
+            else
+            {
+                Mobilitie.findByIdAndUpdate(mobilityid, (err, mobilityUpdated) => {
+
+                    //Si existe un error en el servidor
+                    if(err) return res.status(500).send({
+                        message: "Hubo un error en el servidor. Intentalo de nuevo más tarde."
+                    });
+
+                    //Si no se puede actualizar
+                    if(!mobilityUpdated) return res.status(406).send({
+                        message: "No se puede actualizar el registro. Intentalo de nuevo."
+                    });
+
+                    //Si no existen errores
+                    return res.status(201).send({update: mobilityRepeat});
+                });
+            }
+        });
+    }
+
+    //Si el usuario no llena todo el formulario
+    else
+    {
+        return res.status(406).send({
+            message: "No puedes dejar campos vacios en el formulario"
+        });
+    }
+}
+
 //Exportamos los métodos
 module.exports = {
     home,
@@ -294,5 +353,6 @@ module.exports = {
     updateRegister,
     removeRegister,
     createMobility,
-    getMobility
+    getMobility,
+    updateMobility
 }

@@ -16,6 +16,7 @@ api.put('/actualizar-registro/:id', MobilityController.updateRegister);
 api.delete('/eliminar-registro/:id', MobilityController.removeRegister);
 api.post('/crear-movilidad', MobilityController.createMobility);
 api.get('/consultar-movilidad', MobilityController.getMobility);
+api.put('/actualizar-movilidad', MobilityController.updateMobility);
 
 //Exportamos las api
 module.exports = api;
