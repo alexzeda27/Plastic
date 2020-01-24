@@ -298,7 +298,7 @@ function getEmployee(req, res)
         else
         {
             //Department desplegara su información
-            Department.populate(employee, {path: 'department'}, (err, check) => {
+            return Department.populate(employee, {path: 'department'}, (err, check) => {
 
                 //Si existe un error en el servidor
                 if(err) return res.status(500).send({
@@ -355,7 +355,7 @@ function getEmployees(req, res)
         else
         {
             //El objeto de departamento mostrara su contenido
-            Department.populate(employees, {path: 'department'}, (err, doc) => {
+            return Department.populate(employees, {path: 'department'}, (err, doc) => {
 
                 //Si existe un error en el servidor
                 if(err) return res.status(500).send({

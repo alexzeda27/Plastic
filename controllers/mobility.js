@@ -25,9 +25,6 @@ function createRegister(req, res)
     //Creamos el objeto de registro
     var register = new Register();
 
-    //Creamos el objeto moment
-    var now = moment();
-
     //Si el usuario llena todo el formulario
     if(params.month && params.week && params.day)
     {
@@ -35,6 +32,11 @@ function createRegister(req, res)
         register.month = params.month;
         register.week = params.week;
         register.day = params.day
+
+        //Hacemos las conversiones
+        register.month = moment().format('MMMM YYYY');
+        register.week = moment().format('ww');
+        register.day = moment().format('Do dddd');
 
         //EL objeto buscara documentos repetidos
         Register.find({day: register.day}, (err, registerRepeat) => {
@@ -216,6 +218,7 @@ function createMobility(req, res)
         mobilitie.operator = params.operator;
         mobilitie.register = params.register;
 
+
         //El objeto buscara que los registros no repitan las horas
         Mobilitie.find({hour: mobilitie.hour}, (err, mobilitieRepeat) => {
 
@@ -345,6 +348,31 @@ function updateMobility(req, res)
     }
 }
 
+//Función para eliminar la movilidad
+function removeMobility(req, res)
+{
+    //Recogemos el id por parametro
+    var mobilityId = req.params.id;
+
+    //El objeto buscara el documento
+    Mobilitie.findByIdAndDelete(mobilityId, (err, mobilityDeleted) => {
+
+        //Si existe un error en el servidor
+        if(err) return res.status(500).send({
+            message: "Hubo un error en la petición del servidor. Intentalo de nuevo."
+        });
+
+        //Si el id no existe 
+        if(!mobilityDeleted) return res.status(404).send({
+            message: "No se encontro la movilidad, Verifique la información."
+        });
+
+        return res.status(201).send({
+            message: "Movilidad eliminada correctamente."
+        });
+    });
+}
+
 //Exportamos los métodos
 module.exports = {
     home,
@@ -354,5 +382,6 @@ module.exports = {
     removeRegister,
     createMobility,
     getMobility,
-    updateMobility
+    updateMobility,
+    removeMobility
 }
