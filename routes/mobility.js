@@ -1,23 +1,19 @@
 'use strict'
 
-//Importamos el controlador de movilidad
-var MobilityController = require('../controllers/mobility');
-//Importamos la libreria de express
+//Librerias
 var express = require('express');
 
-//Usamos el método de Router para definir las rutas
+//Controladores
+var MobilityController = require('../controllers/mobility');
+
+//Método Router
 var api = express.Router();
 
-//Rutas
-api.get('/', MobilityController.home);
-api.post('/crear-registro', MobilityController.createRegister);
-api.get('/consultar-registros', MobilityController.getRegisters);
-api.put('/actualizar-registro/:id', MobilityController.updateRegister);
-api.delete('/eliminar-registro/:id', MobilityController.removeRegister);
+//** TO DO Definir Métodos */
 api.post('/crear-movilidad', MobilityController.createMobility);
-api.get('/consultar-movilidad', MobilityController.getMobility);
-api.put('/actualizar-movilidad', MobilityController.updateMobility);
-api.delete('/eliminar-movilidad', MobilityController.removeMobility);
+api.get('/consultar-movilidad/:id', MobilityController.getMobility);
+api.get('/consultar-movilidades', MobilityController.getMobilities);
+api.delete('/eliminar-movilidad/:id', MobilityController.removeMobility);
 
-//Exportamos las api
+//Exportar
 module.exports = api;

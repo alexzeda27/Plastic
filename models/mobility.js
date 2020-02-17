@@ -1,18 +1,21 @@
-' use strict'
+'use strict'
 
+//Librerias
 var mongoose = require('mongoose');
+
+//Esquema del modelo
 var Schema = mongoose.Schema;
 
+//Modelo de Movilidad
 var MobilitySchema = Schema({
 
-    hour: String,
-    indicator: String,
-    observations: String,
-    department: { type: Schema.ObjectId, ref: 'Department' },
-    square: { type: Schema.ObjectId, ref: 'Square' },
+    square: { type: Schema.ObjectId, ref: 'SquareMobilities' },
     machine: { type: Schema.ObjectId, ref: 'Machine' },
     operator: { type: Schema.ObjectId, ref: 'Operator' },
-    register: { type: Schema.ObjectId, ref: 'Register'}
+    product: { type: Schema.ObjectId, ref: 'Product' },
+    indicator: String,
+    observations: String
 });
 
+//Exportar modelo
 module.exports = mongoose.model('Mobilitie', MobilitySchema);
