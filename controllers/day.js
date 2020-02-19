@@ -16,7 +16,7 @@ function getDay(req, res)
         if(!days) return Methods.responseNotFound(res, "No se han encontrado días.");
         else
         {
-            return Methods.responseOk(res, days);
+            return res.status(200).send({days: days});
         }
     });
 }

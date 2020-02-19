@@ -16,7 +16,7 @@ function getWeek(req, res)
         if(!weeks) return Methods.responseNotFound(res, "No se han encontrado semanas.");
         else
         {
-            return Methods.responseOk(res, weeks);
+            return res.status(200).send({weeks: weeks});
         }
     });
 }

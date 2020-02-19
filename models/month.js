@@ -9,7 +9,7 @@ var Schema = mongoose.Schema;
 //Modelo de Mes
 var MonthSchema = Schema({
 
-    month: String
+    mes: String
 });
 
 //Exportar modelo

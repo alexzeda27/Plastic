@@ -52,7 +52,7 @@ function getMobilityDate(req, res)
         if(!mobilities) return Methods.responseNotFound(res, "No se ha encontrado la fecha de movilidad. Intente con otro.");
         else
         {
-            return Methods.responseOk(res, mobilities);
+            return res.status(200).send({mobilityDates: mobilities});
         }
     });
 }
@@ -65,7 +65,7 @@ function getMobilityDates(req, res)
         if(!mobilities) return Methods.responseNotFound(res, "No hay fechas de movilidad.");
         else
         {
-            return Methods.responseOk(res, mobilities);
+            return res.status(200).send({mobilityDates: mobilities});
         }
     });
 }

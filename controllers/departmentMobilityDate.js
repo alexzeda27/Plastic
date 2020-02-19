@@ -19,7 +19,10 @@ function createDepartmentMobility(req, res)
         departmentMobility.mobilityDate = params.mobilityDate;
         departmentMobility.department = params.department;
 
-        DepartmentMobility.find({department: departmentMobility.department}, (err, mobilityDepartments) => {
+        DepartmentMobility.find({$and: [
+            {mobilityDate: departmentMobility.mobilityDate},
+            {department: departmentMobility.department}
+        ]}).exec((err, mobilityDepartments) => {
             if(err) return Methods.responseErrorServer(res);
             if(mobilityDepartments && mobilityDepartments.length >= 1) return Methods.responseNotAccepted(res, "Ya existe más de un registro con exte departamento.");
             else
@@ -50,7 +53,7 @@ function getDepartmentMobility(req, res)
         if(!departments) return Methods.responseNotFound(res, "No se ha encontrado el departamento de movilidad");
         else
         {
-            return Methods.responseOk(res, departments);
+            return res.status(200).send({departmentMobilities: departments});
         }
     })
 }
@@ -63,7 +66,7 @@ function getDepartmentsMobility(req, res)
         if(!departments) return Methods.responseNotFound(res, "No se ha encontrado ningun departamento");
         else
         {
-            return Methods.responseOk(res, departments);
+            return res.status(200).send({departmentMobilities: departments});
         }
     })
 }

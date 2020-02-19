@@ -9,7 +9,7 @@ var Schema = mongoose.Schema;
 //Modelo de Semana
 var WeekSchema = Schema({
 
-    week: String
+    semana: String
 });
 
 //Exportar modelo

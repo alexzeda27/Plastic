@@ -3,10 +3,7 @@
 //Códigos HTTP
 
 //Función GET
-function responseOk(res, message)
-{
-    return res.status(200).send({object: message});
-}
+
 
 //Función POST & PUT
 function responseCreated(res, message)
@@ -34,7 +31,6 @@ function responseErrorServer(res)
 
 //Exportar
 module.exports = {
-    responseOk,
     responseCreated,
     responseNotFound,
     responseNotAccepted,

@@ -19,7 +19,10 @@ function createSquareMobility(req, res)
         squareMobility.departmentMobility = params.departmentMobility;
         squareMobility.square = params.square;
 
-        SquareMobility.find({square: squareMobility.square}, (err, mobilitySquare) => {
+        SquareMobility.find({$and: [
+            {departmentMobility: squareMobility.departmentMobility},
+            {square: squareMobility.square}
+        ]}).exec((err, mobilitySquare) => {
             if(err) return Methods.responseErrorServer(res);
             if(mobilitySquare && mobilitySquare.length >= 1) return Methods.responseNotAccepted(res, "Ya existe más de un registro con este bloque.");
             else
@@ -51,7 +54,7 @@ function getSquareMobility(req, res)
         if(!squares) return Methods.responseNotFound(res, "No se ha encontrado el bloque de movilidad");
         else
         {
-            return Methods.responseOk(res, squares);
+            return res.status(200).send({squareMobilities: squares});
         }
     })
 }
@@ -65,7 +68,7 @@ function getSquaresMobility(req, res)
         if(!squares) return Methods.responseNotFound(res, "No se ha encontrado ningun bloque");
         else
         {
-            return Methods.responseOk(res, squares);
+            return res.status(200).send({squareMobilities: squares});
         }
     })
 }

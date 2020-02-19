@@ -16,7 +16,7 @@ function getMonth(req, res)
         if(!months) return Methods.responseNotFound(res, "No se han encontrado meses.");
         else
         {
-            return Methods.responseOk(res, months);
+            return res.status(200).send({months: months});
         }
     });
 }

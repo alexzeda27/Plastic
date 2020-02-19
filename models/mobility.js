@@ -9,7 +9,7 @@ var Schema = mongoose.Schema;
 //Modelo de Movilidad
 var MobilitySchema = Schema({
 
-    square: { type: Schema.ObjectId, ref: 'SquareMobilities' },
+    squareMobility: { type: Schema.ObjectId, ref: 'SquareMobilities' },
     machine: { type: Schema.ObjectId, ref: 'Machine' },
     operator: { type: Schema.ObjectId, ref: 'Operator' },
     product: { type: Schema.ObjectId, ref: 'Product' },

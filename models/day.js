@@ -9,7 +9,7 @@ var Schema = mongoose.Schema;
 //Modelo de Día
 var DaySchema = Schema({
 
-    day: String
+    dia: String
 });
 
 //Exportar modelo
